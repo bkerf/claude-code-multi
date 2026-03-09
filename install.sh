@@ -269,15 +269,13 @@ ccc() {
     echo ""
     echo "Examples:"
     echo "  ccc deepseek                              # Launch with DeepSeek"
-    echo "  ccc open kimi                             # Launch with OpenRouter (kimi)"
+    echo "  ccc kimi china                            # Launch with Kimi (china region)"
+    echo "  ccc kimi global                           # Launch with Kimi (global region)"
     echo "  ccc woohelps                              # Switch to 'woohelps' account and launch"
     echo "  ccc claude:work                           # Switch to 'work' account and use Claude"
-    echo "  ccc glm --dangerously-skip-permissions    # Launch GLM with options"
+    echo "  CCM_SKIP_PERMISSIONS=0 ccc glm            # Disable auto skip permissions"
     echo ""
-    echo "Available models:"
-    echo "  Official: deepseek, glm, kimi, qwen, seed|doubao, claude, minimax"
-    echo "  OpenRouter: open <provider>"
-    echo "  Account:  <account> | claude:<account>"
+    echo "Note: --dangerously-skip-permissions is added by default. Set CCM_SKIP_PERMISSIONS=0 to disable."
     return 1
   fi
 
@@ -328,6 +326,8 @@ ccc() {
           if [[ "\${1:-}" =~ ^(global|china|cn)$ ]]; then
             region_arg="\$1"
             shift || true
+          else
+            region_arg="china"  # 默认 china
           fi
           ;;
         seed|doubao)
@@ -366,11 +366,34 @@ ccc() {
     return 127
   fi
 
-  # Launch Claude Code
+  # Default skip permissions (can be disabled via CCM_SKIP_PERMISSIONS=0)
+  local SKIP_PERMS="\${CCM_SKIP_PERMISSIONS:-1}"
+
+  # Launch Claude Code with --dangerously-skip-permissions by default
   if [[ \${#claude_args[@]} -eq 0 ]]; then
-    exec claude
+    if [[ "\$SKIP_PERMS" == "1" ]]; then
+      exec claude --dangerously-skip-permissions
+    else
+      exec claude
+    fi
   else
-    exec claude "\${claude_args[@]}"
+    # Check if args already contain --dangerously-skip-permissions
+    has_dsp=false
+    for arg in "\${claude_args[@]}"; do
+      if [[ "\$arg" == "--dangerously-skip-permissions" ]]; then
+        has_dsp=true
+        break
+      fi
+    done
+    if \$has_dsp; then
+      exec claude "\${claude_args[@]}"
+    else
+      if [[ "\$SKIP_PERMS" == "1" ]]; then
+        exec claude --dangerously-skip-permissions "\${claude_args[@]}"
+      else
+        exec claude "\${claude_args[@]}"
+      fi
+    fi
   fi
 }
 $END_MARK
@@ -522,10 +545,13 @@ Usage: ccc <model> [region|variant] [claude-options]
 
 Examples:
   ccc deepseek                     # Launch Claude Code with DeepSeek
-  ccc open kimi                    # Launch with OpenRouter (kimi)
-  ccc kimi --dangerously-skip-permissions  # Pass options to Claude Code
+  ccc kimi china                   # Launch with Kimi (china region)
+  ccc kimi global                  # Launch with Kimi (global region)
   ccc woohelps                     # Switch to 'woohelps' account and launch
   ccc claude:work                  # Switch to 'work' account and use Claude
+  CCM_SKIP_PERMISSIONS=0 ccc glm   # Disable auto skip permissions
+
+Note: --dangerously-skip-permissions is added by default. Set CCM_SKIP_PERMISSIONS=0 to disable.
 
 Available models:
   Official: deepseek, glm, kimi, qwen, seed|doubao, claude, minimax
@@ -590,6 +616,8 @@ else
                 if [[ "${1:-}" =~ ^(global|china|cn)$ ]]; then
                     region_arg="$1"
                     shift || true
+                else
+                    region_arg="china"  # 默认 china
                 fi
                 ;;
             seed|doubao)
@@ -622,10 +650,33 @@ if ! command -v claude >/dev/null 2>&1; then
     exit 127
 fi
 
+# Default skip permissions (can be disabled via CCM_SKIP_PERMISSIONS=0)
+SKIP_PERMS="${CCM_SKIP_PERMISSIONS:-1}"
+
 if [[ ${#claude_args[@]} -eq 0 ]]; then
-    exec claude
+    if [[ "$SKIP_PERMS" == "1" ]]; then
+        exec claude --dangerously-skip-permissions
+    else
+        exec claude
+    fi
 else
-    exec claude "${claude_args[@]}"
+    # Check if args already contain --dangerously-skip-permissions
+    has_dsp=false
+    for arg in "${claude_args[@]}"; do
+        if [[ "$arg" == "--dangerously-skip-permissions" ]]; then
+            has_dsp=true
+            break
+        fi
+    done
+    if $has_dsp; then
+        exec claude "${claude_args[@]}"
+    else
+        if [[ "$SKIP_PERMS" == "1" ]]; then
+            exec claude --dangerously-skip-permissions "${claude_args[@]}"
+        else
+            exec claude "${claude_args[@]}"
+        fi
+    fi
 fi
 EOF
   else
@@ -644,10 +695,13 @@ Usage: ccc <model> [region|variant] [claude-options]
 
 Examples:
   ccc deepseek                     # Launch Claude Code with DeepSeek
-  ccc open kimi                    # Launch with OpenRouter (kimi)
-  ccc kimi --dangerously-skip-permissions  # Pass options to Claude Code
+  ccc kimi china                   # Launch with Kimi (china region)
+  ccc kimi global                  # Launch with Kimi (global region)
   ccc woohelps                     # Switch to 'woohelps' account and launch
   ccc claude:work                  # Switch to 'work' account and use Claude
+  CCM_SKIP_PERMISSIONS=0 ccc glm   # Disable auto skip permissions
+
+Note: --dangerously-skip-permissions is added by default. Set CCM_SKIP_PERMISSIONS=0 to disable.
 
 Available models:
   Official: deepseek, glm, kimi, qwen, seed|doubao, claude, minimax
@@ -712,6 +766,8 @@ else
                 if [[ "${1:-}" =~ ^(global|china|cn)$ ]]; then
                     region_arg="$1"
                     shift || true
+                else
+                    region_arg="china"  # 默认 china
                 fi
                 ;;
             seed|doubao)
@@ -744,10 +800,33 @@ if ! command -v claude >/dev/null 2>&1; then
     exit 127
 fi
 
+# Default skip permissions (can be disabled via CCM_SKIP_PERMISSIONS=0)
+SKIP_PERMS="${CCM_SKIP_PERMISSIONS:-1}"
+
 if [[ ${#claude_args[@]} -eq 0 ]]; then
-    exec claude
+    if [[ "$SKIP_PERMS" == "1" ]]; then
+        exec claude --dangerously-skip-permissions
+    else
+        exec claude
+    fi
 else
-    exec claude "${claude_args[@]}"
+    # Check if args already contain --dangerously-skip-permissions
+    has_dsp=false
+    for arg in "${claude_args[@]}"; do
+        if [[ "$arg" == "--dangerously-skip-permissions" ]]; then
+            has_dsp=true
+            break
+        fi
+    done
+    if $has_dsp; then
+        exec claude "${claude_args[@]}"
+    else
+        if [[ "$SKIP_PERMS" == "1" ]]; then
+            exec claude --dangerously-skip-permissions "${claude_args[@]}"
+        else
+            exec claude "${claude_args[@]}"
+        fi
+    fi
 fi
 EOF
     content="${content//__DATA_DIR__/$data_dir}"
