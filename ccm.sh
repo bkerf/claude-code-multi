@@ -130,6 +130,50 @@ detect_language() {
     fi
 }
 
+#========================================
+# Provider 模型变体映射
+#========================================
+
+# 解析模型变体
+# $1 = provider (ali)
+# $2 = variant (qwen/kimi/glm/minimax)
+# 返回: 实际模型 ID，若变体无效则返回空
+resolve_model_variant() {
+    local provider="$1"
+    local variant="$2"
+
+    case "$provider" in
+        ali|alibaba)
+            case "$variant" in
+                "qwen"|"qwen3.5")    echo "qwen3.5-plus" ;;
+                "kimi"|"kimi-k2.5")  echo "kimi-k2.5" ;;
+                "glm"|"glm5")        echo "glm-5" ;;
+                "minimax"|"mm")      echo "MiniMax-M2.5" ;;
+                *)                   echo "" ;;
+            esac
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+# 获取 provider 可用的模型变体列表
+# $1 = provider
+# 返回: 空格分隔的变体列表
+get_available_variants() {
+    local provider="$1"
+
+    case "$provider" in
+        ali|alibaba)
+            echo "qwen kimi glm minimax"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
 # 智能加载配置：环境变量优先，配置文件补充
 load_config() {
     # 初始化语言
@@ -473,7 +517,7 @@ project_write_settings() {
     local region="${2:-global}"
 
     # Normalize region if needed
-    if [[ "$provider" =~ ^(glm|kimi|qwen|minimax)$ ]]; then
+    if [[ "$provider" =~ ^(glm|kimi|ali|minimax)$ ]]; then
         local normalized_region
         if ! normalized_region="$(normalize_region "$region")"; then
             echo -e "${RED}❌ Invalid region: $region${NC}" >&2
@@ -545,7 +589,7 @@ project_show_usage() {
     echo "  glm [global|china]    - GLM" >&2
     echo "  deepseek              - DeepSeek" >&2
     echo "  kimi [global|china]   - Kimi" >&2
-    echo "  qwen [global|china]   - Qwen" >&2
+    echo "  ali [variant] [global|china] - Alibaba Coding Plan" >&2
     echo "  minimax [global|china] - MiniMax" >&2
     echo "  seed                  - Doubao/Seed" >&2
     echo "  claude                - Claude (official)" >&2
@@ -620,7 +664,7 @@ get_provider_config() {
                     ;;
             esac
             ;;
-        "qwen")
+        "ali"|"alibaba")
             if ! is_effectively_set "$QWEN_API_KEY"; then
                 echo -e "${RED}❌ Please configure QWEN_API_KEY first${NC}" >&2
                 return 1
@@ -681,7 +725,7 @@ user_write_settings() {
     local region="${2:-global}"
 
     # Normalize region if needed
-    if [[ "$provider" =~ ^(glm|kimi|qwen|minimax)$ ]]; then
+    if [[ "$provider" =~ ^(glm|kimi|ali|minimax)$ ]]; then
         local normalized_region
         if ! normalized_region="$(normalize_region "$region")"; then
             echo -e "${RED}❌ Invalid region: $region${NC}" >&2
@@ -842,7 +886,7 @@ user_show_usage() {
     echo "  glm [global|china]    - GLM" >&2
     echo "  deepseek              - DeepSeek" >&2
     echo "  kimi [global|china]   - Kimi" >&2
-    echo "  qwen [global|china]   - Qwen" >&2
+    echo "  ali [variant] [global|china] - Alibaba Coding Plan" >&2
     echo "  minimax [global|china] - MiniMax" >&2
     echo "  seed                  - Doubao/Seed" >&2
     echo "  claude                - Claude (official)" >&2
@@ -1675,16 +1719,16 @@ switch_to_minimax() {
     echo "   MODEL: $ANTHROPIC_MODEL"
 }
 
-# 切换到 Qwen（Coding Plan）
-switch_to_qwen() {
-    local region_input="${1:-global}"
+# 切换到 Alibaba Cloud Coding Plan
+switch_to_ali() {
+    local region_input="${1:-china}"
     local region
     if ! region="$(normalize_region "$region_input")"; then
         echo -e "${RED}❌ $(t 'unknown_option'): $region_input${NC}"
-        echo -e "${YELLOW}💡 Usage: ccm qwen [global|china]${NC}"
+        echo -e "${YELLOW}💡 Usage: ccm ali [qwen|kimi|glm|minimax] [global|china]${NC}"
         return 1
     fi
-    echo -e "${YELLOW}🔄 $(t 'switching_to') Qwen (${region}) $(t 'model')...${NC}"
+    echo -e "${YELLOW}🔄 $(t 'switching_to') Alibaba Coding Plan (${region})...${NC}"
     clean_env
     if ! is_effectively_set "$QWEN_API_KEY"; then
         echo -e "${RED}❌ Please configure QWEN_API_KEY${NC}"
@@ -1699,15 +1743,15 @@ switch_to_qwen() {
             base_url="https://coding.dashscope.aliyuncs.com/apps/anthropic"
             ;;
     esac
-    local qwen_model="${QWEN_MODEL:-qwen3-max-2026-01-23}"
+    local ali_model="${QWEN_MODEL:-qwen3.5-plus}"
     export ANTHROPIC_BASE_URL="$base_url"
     export ANTHROPIC_AUTH_TOKEN="$QWEN_API_KEY"
-    export ANTHROPIC_MODEL="$qwen_model"
-    export ANTHROPIC_DEFAULT_SONNET_MODEL="$qwen_model"
-    export ANTHROPIC_DEFAULT_OPUS_MODEL="$qwen_model"
-    export ANTHROPIC_DEFAULT_HAIKU_MODEL="qwen3-coder-plus"
+    export ANTHROPIC_MODEL="$ali_model"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="$ali_model"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="$ali_model"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="$ali_model"
     export CLAUDE_CODE_SUBAGENT_MODEL="$ANTHROPIC_MODEL"
-    echo -e "${GREEN}✅ $(t 'switched_to') Qwen (${region})（$(t 'official')）${NC}"
+    echo -e "${GREEN}✅ $(t 'switched_to') Alibaba Coding Plan (${region})${NC}"
     echo "   BASE_URL: $ANTHROPIC_BASE_URL"
     echo "   MODEL: $ANTHROPIC_MODEL"
 }
@@ -1767,7 +1811,7 @@ show_help() {
     echo -e "${YELLOW}$(t 'model_options'):${NC}"
     echo "  deepseek, ds            - env deepseek"
     echo "  kimi [global|china]     - env kimi (default: global)"
-    echo "  qwen [global|china]     - env qwen (default: global)"
+    echo "  ali [variant] [global|china] - env ali (default: qwen, china)"
     echo "  glm [global|china]      - env glm (default: global)"
     echo "  minimax [global|china]  - env minimax (default: global)"
     echo "  seed [doubao|glm|deepseek|kimi] - env 豆包 Seed-Code"
@@ -1778,12 +1822,12 @@ show_help() {
     echo -e "${YELLOW}User-level Settings (highest priority):${NC}"
     echo "  user <provider> [region] - write to ~/.claude/settings.json"
     echo "  user reset               - remove ccm settings, restore env var control"
-    echo "  Providers: glm, deepseek, kimi, qwen, minimax, seed, stepfun, claude"
+    echo "  Providers: glm, deepseek, kimi, ali, minimax, seed, stepfun, claude"
     echo ""
     echo -e "${YELLOW}Project-level Settings:${NC}"
     echo "  project <provider> [region] - write .claude/settings.local.json (project-only)"
     echo "  project reset              - remove project override"
-    echo "  Providers: glm, deepseek, kimi, qwen, minimax, seed, claude"
+    echo "  Providers: glm, deepseek, kimi, ali, minimax, seed, claude"
     echo ""
     echo -e "${YELLOW}Claude Pro Account Management:${NC}"
     echo "  save-account <name>     - Save current Claude Pro account"
@@ -1803,7 +1847,7 @@ show_help() {
     echo -e "${YELLOW}$(t 'examples'):${NC}"
     echo "  eval \"\$(ccm deepseek)\"                   # Apply in current shell (recommended)"
     echo "  eval \"\$(ccm kimi china)\"              # Kimi CN"
-    echo "  eval \"\$(ccm qwen global)\"             # Qwen global (Coding Plan)"
+    echo "  eval \"\$(ccm ali qwen global)\"         # Alibaba Coding Plan (qwen3.5-plus)"
     echo "  eval \"\$(ccm seed kimi)\"               # 豆包 Seed-Code (kimi)"
     echo "  eval \"\$(ccm open kimi)\"               # OpenRouter kimi"
     echo ""
@@ -1819,7 +1863,7 @@ show_help() {
     echo "  🌰 豆包 Seed-Code       - ark-code-latest (ark.cn-beijing.volces.com/api/coding)"
     echo "  ⚡ StepFun              - step-3.5-flash (api.stepfun.ai)"
     echo "  🎯 MiniMax              - MiniMax-M2.5 (api.minimax.io / api.minimaxi.com)"
-    echo "  🐪 Qwen                 - qwen3-max-2026-01-23 / qwen3-coder-plus (Coding Plan)"
+    echo "  ☁️  Alibaba             - qwen3.5-plus / kimi-k2.5 / glm-5 / MiniMax-M2.5 (Coding Plan)"
     echo "  🇨🇳 GLM                 - glm-5 (api.z.ai / open.bigmodel.cn)"
     echo "  🧠 Claude Sonnet 4.5    - claude-sonnet-4-5-20250929"
 }
@@ -1953,7 +1997,7 @@ show_open_help() {
     echo "  ccm open <provider>"
     echo ""
     echo -e "${YELLOW}Supported providers:${NC}"
-    echo "  claude (default), deepseek, kimi, glm, qwen, minimax, stepfun"
+    echo "  claude (default), deepseek, kimi, glm, ali, minimax, stepfun"
     echo ""
     echo -e "${YELLOW}Free tier:${NC}"
     echo "  stepfun-free (sf-free) - stepfun/step-3.5-flash:free"
@@ -2013,7 +2057,7 @@ emit_openrouter_exports() {
             default_opus="$model"
             default_haiku="$model"
             ;;
-        "qwen")
+        "ali"|"alibaba")
             model="qwen/qwen3-coder-next"
             small="qwen/qwen3-coder-next"
             default_sonnet="qwen/qwen3-coder-next"
@@ -2063,7 +2107,8 @@ emit_openrouter_exports() {
 
 emit_env_exports() {
     local target="$1"
-    local arg="${2:-}"
+    local variant="${2:-}"      # 模型变体（新参数）
+    local region="${3:-}"       # 区域参数（原第二个参数）
     # 加载配置以便进行存在性判断（环境变量优先，不打印密钥）
     load_config || return 1
 
@@ -2094,24 +2139,41 @@ emit_env_exports() {
                 echo -e "${RED}❌ Please configure KIMI_API_KEY${NC}" >&2
                 return 1
             fi
-            local region_input="$arg"
+            # 智能参数检测：如果 variant 看起来像区域参数，则交换
+            local kimi_variant="$variant"
+            local kimi_region="$region"
             if [[ "$target" == "kimi-cn" ]]; then
-                region_input="china"
+                kimi_region="china"
+            elif [[ -z "$region" ]] && [[ "$variant" =~ ^(global|china|cn)$ ]]; then
+                kimi_variant=""
+                kimi_region="$variant"
             fi
-            local region
-            if ! region="$(normalize_region "$region_input")"; then
-                echo -e "${RED}❌ $(t 'unknown_option'): $region_input${NC}" >&2
-                echo -e "${YELLOW}💡 Usage: ccm kimi [global|china]${NC}" >&2
+            if ! kimi_region="$(normalize_region "$kimi_region")"; then
+                echo -e "${RED}❌ $(t 'unknown_option'): $kimi_region${NC}" >&2
+                echo -e "${YELLOW}💡 Usage: ccm kimi[:variant] [global|china]${NC}" >&2
                 return 1
             fi
             local kimi_base_url=""
-            local kimi_model=""
-            if [[ "$region" == "global" ]]; then
+            if [[ "$kimi_region" == "global" ]]; then
                 kimi_base_url="https://api.moonshot.ai/anthropic"
-                kimi_model="${KIMI_MODEL:-kimi-k2.5}"
             else
                 kimi_base_url="https://api.moonshot.cn/anthropic"
-                kimi_model="${KIMI_CN_MODEL:-kimi-k2.5}"
+            fi
+            # 解析模型变体
+            local kimi_model=""
+            if [[ -n "$kimi_variant" ]]; then
+                kimi_model="$(resolve_model_variant kimi "$kimi_variant")"
+                if [[ -z "$kimi_model" ]]; then
+                    echo -e "${RED}❌ Unknown model variant '$kimi_variant' for kimi${NC}" >&2
+                    echo -e "${YELLOW}💡 Available variants: $(get_available_variants kimi)${NC}" >&2
+                    return 1
+                fi
+            else
+                if [[ "$kimi_region" == "global" ]]; then
+                    kimi_model="${KIMI_MODEL:-kimi-k2.5}"
+                else
+                    kimi_model="${KIMI_CN_MODEL:-kimi-k2.5}"
+                fi
             fi
             echo "$prelude"
             echo "export ANTHROPIC_BASE_URL='${kimi_base_url}'"
@@ -2121,44 +2183,67 @@ emit_env_exports() {
             emit_default_models "$kimi_model" "$kimi_model" "$kimi_model"
             emit_subagent_model "$kimi_model"
             ;;
-        "qwen")
+        "ali"|"alibaba")
             if ! is_effectively_set "$QWEN_API_KEY"; then
                 echo -e "${RED}❌ Please configure QWEN_API_KEY${NC}" >&2
                 return 1
             fi
-            local qwen_region
-            if ! qwen_region="$(normalize_region "$arg")"; then
-                echo -e "${RED}❌ $(t 'unknown_option'): $arg${NC}" >&2
-                echo -e "${YELLOW}💡 Usage: ccm qwen [global|china]${NC}" >&2
+            # 智能参数检测：如果 variant 看起来像区域参数，则交换
+            local ali_variant="$variant"
+            local ali_region="$region"
+            if [[ -z "$region" ]] && [[ "$variant" =~ ^(global|china|cn)$ ]]; then
+                ali_variant=""
+                ali_region="$variant"
+            fi
+            if ! ali_region="$(normalize_region "$ali_region")"; then
+                echo -e "${RED}❌ $(t 'unknown_option'): $ali_region${NC}" >&2
+                echo -e "${YELLOW}💡 Usage: ccm ali[:variant] [global|china]${NC}" >&2
                 return 1
             fi
-            local qwen_base_url=""
-            case "$qwen_region" in
+            local ali_base_url=""
+            case "$ali_region" in
                 "global")
-                    qwen_base_url="https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
+                    ali_base_url="https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
                     ;;
                 "china")
-                    qwen_base_url="https://coding.dashscope.aliyuncs.com/apps/anthropic"
+                    ali_base_url="https://coding.dashscope.aliyuncs.com/apps/anthropic"
                     ;;
             esac
-            local qwen_model="${QWEN_MODEL:-qwen3-max-2026-01-23}"
+            # 解析模型变体
+            local ali_model=""
+            if [[ -n "$ali_variant" ]]; then
+                ali_model="$(resolve_model_variant ali "$ali_variant")"
+                if [[ -z "$ali_model" ]]; then
+                    echo -e "${RED}❌ Unknown model variant '$ali_variant' for ali${NC}" >&2
+                    echo -e "${YELLOW}💡 Available variants: $(get_available_variants ali)${NC}" >&2
+                    return 1
+                fi
+            else
+                ali_model="${QWEN_MODEL:-qwen3.5-plus}"
+            fi
             echo "$prelude"
-            echo "export ANTHROPIC_BASE_URL='${qwen_base_url}'"
+            echo "export ANTHROPIC_BASE_URL='${ali_base_url}'"
             echo "if [ -f \"\$HOME/.ccm_config\" ]; then . \"\$HOME/.ccm_config\" >/dev/null 2>&1; fi"
             echo "export ANTHROPIC_AUTH_TOKEN=\"\${QWEN_API_KEY}\""
-            echo "export ANTHROPIC_MODEL='${qwen_model}'"
-            emit_default_models "$qwen_model" "$qwen_model" "qwen3-coder-plus"
-            emit_subagent_model "$qwen_model"
+            echo "export ANTHROPIC_MODEL='${ali_model}'"
+            emit_default_models "$ali_model" "$ali_model" "$ali_model"
+            emit_subagent_model "$ali_model"
             ;;
-        "glm"|"glm5")
+        "glm"|"glm5"|"glm4"|"glm4.6"|"glm4.7")
             if ! is_effectively_set "$GLM_API_KEY"; then
                 echo -e "${RED}❌ Please configure GLM_API_KEY${NC}" >&2
                 return 1
             fi
-            local glm_region
-            if ! glm_region="$(normalize_region "$arg")"; then
-                echo -e "${RED}❌ $(t 'unknown_option'): $arg${NC}" >&2
-                echo -e "${YELLOW}💡 Usage: ccm glm [global|china]${NC}" >&2
+            # 智能参数检测：如果 variant 看起来像区域参数，则交换
+            local glm_variant="$variant"
+            local glm_region="$region"
+            if [[ -z "$region" ]] && [[ "$variant" =~ ^(global|china|cn)$ ]]; then
+                glm_variant=""
+                glm_region="$variant"
+            fi
+            if ! glm_region="$(normalize_region "$glm_region")"; then
+                echo -e "${RED}❌ $(t 'unknown_option'): $glm_region${NC}" >&2
+                echo -e "${YELLOW}💡 Usage: ccm glm[:variant] [global|china]${NC}" >&2
                 return 1
             fi
             local glm_base_url=""
@@ -2170,7 +2255,18 @@ emit_env_exports() {
                     glm_base_url="https://open.bigmodel.cn/api/anthropic"
                     ;;
             esac
-            local glm_model="${GLM_MODEL:-glm-5}"
+            # 解析模型变体
+            local glm_model=""
+            if [[ -n "$glm_variant" ]]; then
+                glm_model="$(resolve_model_variant glm "$glm_variant")"
+                if [[ -z "$glm_model" ]]; then
+                    echo -e "${RED}❌ Unknown model variant '$glm_variant' for glm${NC}" >&2
+                    echo -e "${YELLOW}💡 Available variants: $(get_available_variants glm)${NC}" >&2
+                    return 1
+                fi
+            else
+                glm_model="${GLM_MODEL:-glm-5}"
+            fi
             echo "$prelude"
             echo "export ANTHROPIC_BASE_URL='${glm_base_url}'"
             echo "if [ -f \"\$HOME/.ccm_config\" ]; then . \"\$HOME/.ccm_config\" >/dev/null 2>&1; fi"
@@ -2184,10 +2280,16 @@ emit_env_exports() {
                 echo -e "${RED}❌ Please configure MINIMAX_API_KEY${NC}" >&2
                 return 1
             fi
-            local mm_region
-            if ! mm_region="$(normalize_region "$arg")"; then
-                echo -e "${RED}❌ $(t 'unknown_option'): $arg${NC}" >&2
-                echo -e "${YELLOW}💡 Usage: ccm minimax [global|china]${NC}" >&2
+            # 智能参数检测：如果 variant 看起来像区域参数，则交换
+            local mm_variant="$variant"
+            local mm_region="$region"
+            if [[ -z "$region" ]] && [[ "$variant" =~ ^(global|china|cn)$ ]]; then
+                mm_variant=""
+                mm_region="$variant"
+            fi
+            if ! mm_region="$(normalize_region "$mm_region")"; then
+                echo -e "${RED}❌ $(t 'unknown_option'): $mm_region${NC}" >&2
+                echo -e "${YELLOW}💡 Usage: ccm minimax[:variant] [global|china]${NC}" >&2
                 return 1
             fi
             local mm_base_url=""
@@ -2199,7 +2301,18 @@ emit_env_exports() {
                     mm_base_url="https://api.minimaxi.com/anthropic"
                     ;;
             esac
-            local mm_model="${MINIMAX_MODEL:-MiniMax-M2.5}"
+            # 解析模型变体
+            local mm_model=""
+            if [[ -n "$mm_variant" ]]; then
+                mm_model="$(resolve_model_variant minimax "$mm_variant")"
+                if [[ -z "$mm_model" ]]; then
+                    echo -e "${RED}❌ Unknown model variant '$mm_variant' for minimax${NC}" >&2
+                    echo -e "${YELLOW}💡 Available variants: $(get_available_variants minimax)${NC}" >&2
+                    return 1
+                fi
+            else
+                mm_model="${MINIMAX_MODEL:-MiniMax-M2.5}"
+            fi
             echo "$prelude"
             echo "export ANTHROPIC_BASE_URL='${mm_base_url}'"
             echo "if [ -f \"\$HOME/.ccm_config\" ]; then . \"\$HOME/.ccm_config\" >/dev/null 2>&1; fi"
@@ -2213,7 +2326,7 @@ emit_env_exports() {
                 echo -e "${RED}❌ Please configure ARK_API_KEY${NC}" >&2
                 return 1
             fi
-            local seed_variant="$arg"
+            local seed_variant="$variant"
             local seed_model=""
             case "$seed_variant" in
                 ""|"default")
@@ -2277,7 +2390,7 @@ emit_env_exports() {
             emit_subagent_model "$claude_model"
             ;;
         *)
-            echo "# $(t 'usage'): $(basename "$0") env [deepseek|kimi|qwen|glm|minimax|seed|stepfun|claude|open]" 1>&2
+            echo "# $(t 'usage'): $(basename "$0") env [deepseek|kimi|ali|glm|minimax|seed|stepfun|claude|open]" 1>&2
             return 1
             ;;
     esac
@@ -2339,22 +2452,22 @@ main() {
             emit_env_exports deepseek
             ;;
         "kimi"|"kimi2")
-            emit_env_exports kimi "${2:-}"
+            emit_env_exports kimi "${2:-}" "${3:-}"
             ;;
         "kimi-cn")
-            emit_env_exports kimi-cn
+            emit_env_exports kimi-cn "" "${2:-}"
             ;;
-        "qwen")
-            emit_env_exports qwen "${2:-}"
+        "ali"|"alibaba")
+            emit_env_exports ali "${2:-}" "${3:-}"
             ;;
         "minimax"|"mm")
-            emit_env_exports minimax "${2:-}"
+            emit_env_exports minimax "${2:-}" "${3:-}"
             ;;
         "seed"|"doubao")
-            emit_env_exports seed "${2:-}"
+            emit_env_exports seed "${2:-}" ""
             ;;
-        "glm"|"glm5")
-            emit_env_exports glm "${2:-}"
+        "glm"|"glm5"|"glm4"|"glm4.6"|"glm4.7")
+            emit_env_exports glm "${2:-}" "${3:-}"
             ;;
         "stepfun")
             emit_env_exports stepfun
@@ -2373,7 +2486,7 @@ main() {
             shift
             local project_action="${1:-}"
             case "$project_action" in
-                "glm"|"deepseek"|"ds"|"kimi"|"kimi2"|"qwen"|"minimax"|"mm"|"seed"|"doubao"|"claude"|"sonnet"|"s")
+                "glm"|"deepseek"|"ds"|"kimi"|"kimi2"|"ali"|"alibaba"|"minimax"|"mm"|"seed"|"doubao"|"claude"|"sonnet"|"s")
                     project_write_settings "$project_action" "${2:-}"
                     ;;
                 "reset")
@@ -2393,7 +2506,7 @@ main() {
             shift
             local user_action="${1:-}"
             case "$user_action" in
-                "glm"|"deepseek"|"ds"|"kimi"|"kimi2"|"qwen"|"minimax"|"mm"|"seed"|"doubao"|"stepfun"|"claude"|"sonnet"|"s")
+                "glm"|"deepseek"|"ds"|"kimi"|"kimi2"|"ali"|"alibaba"|"minimax"|"mm"|"seed"|"doubao"|"stepfun"|"claude"|"sonnet"|"s")
                     user_write_settings "$user_action" "${2:-}"
                     ;;
                 "reset")

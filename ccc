@@ -11,25 +11,38 @@ CCM="${CCM_CMD:-$CCM_CMD_DEFAULT}"
 
 usage() {
     cat <<EOF
-Usage: ./ccc <model> [region|variant] [claude-options]
+Usage: ./ccc <provider>[:<model>] [region] [claude-options]
        ./ccc open <provider> [claude-options]
        ./ccc <account> [claude-options]        # Switch account then launch (default model)
        ./ccc <model>:<account> [claude-options]
 
+Alibaba Cloud Coding Plan (ali):
+  ali[:qwen|kimi|glm|minimax] [china|global]   - 4 models available
+    qwen    - qwen3.5-plus (multimodal)
+    kimi    - kimi-k2.5 (multimodal)
+    glm     - glm-5
+    minimax - MiniMax-M2.5
+
+Other providers:
+  deepseek|ds              - DeepSeek
+  kimi [china|global]      - Kimi (Moonshot, direct)
+  glm [china|global]       - GLM (Zhipu, direct)
+  minimax [china|global]   - MiniMax (direct)
+  seed|doubao [variant]    - Seed/ARK
+  stepfun                  - StepFun
+  claude|sonnet|s          - Claude (official)
+
 Examples:
-  ./ccc deepseek                     # Launch Claude Code with DeepSeek
-  ./ccc kimi china                   # Launch with Kimi (china region)
-  ./ccc kimi global                  # Launch with Kimi (global region)
-  ./ccc woohelps                     # Switch to 'woohelps' account and launch
-  ./ccc claude:work                  # Switch to 'work' account and use Claude
-  CCM_SKIP_PERMISSIONS=0 ./ccc kimi  # Disable auto skip permissions
+  ./ccc ali                         # Default: qwen3.5-plus, china region
+  ./ccc ali:qwen                    # qwen3.5-plus, china region
+  ./ccc ali:kimi:global             # kimi-k2.5, global region
+  ./ccc ali:glm china               # glm-5, china region
+  ./ccc kimi global                 # Kimi direct (Moonshot API)
+  ./ccc woohelps                    # Switch to 'woohelps' account
+  CCM_SKIP_PERMISSIONS=0 ./ccc kimi # Disable auto skip permissions
 
-Note: --dangerously-skip-permissions is added by default. Set CCM_SKIP_PERMISSIONS=0 to disable.
-
-Available models:
-  Official: deepseek, glm, kimi, qwen, seed|doubao, claude, minimax
-  OpenRouter: open <provider>
-  Account:  <account> | claude:<account>
+Note: --dangerously-skip-permissions is added by default.
+      Set CCM_SKIP_PERMISSIONS=0 to disable.
 EOF
 }
 
@@ -44,10 +57,17 @@ if [[ $# -lt 1 ]]; then
     exit 1
 fi
 
+# 帮助信息
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    usage
+    exit 0
+fi
+
 model=""
 open_provider=""
 region_arg=""
 seed_variant=""
+model_variant=""
 
 if [[ $# -lt 1 ]]; then
     usage
@@ -70,16 +90,36 @@ fi
 
 # Helper: is known model keyword
 is_known_model() {
-    case "$1" in
-        deepseek|ds|glm|glm4|glm4.6|glm4.7|kimi|kimi2|qwen|minimax|mm|seed|doubao|claude|sonnet|s|open)
+    local check_model="$1"
+    # 去除可能的 :variant 后缀
+    check_model="${check_model%%:*}"
+    case "$check_model" in
+        deepseek|ds|glm|glm4|glm4.6|glm4.7|kimi|kimi2|ali|alibaba|minimax|mm|seed|doubao|claude|sonnet|s|open|stepfun)
             return 0 ;;
         *)
             return 1 ;;
     esac
 }
 
-# Account-only mode: `ccc <account>` (not open, not known model, no colon)
-if [[ "$model" != "open" ]] && [[ "$model" != *:* ]] && ! is_known_model "$model" && [[ ! "$model" =~ ^- ]]; then
+# 解析 provider:variant 格式（冒号分隔语法）
+# 支持格式: qwen:plus, qwen:plus:china, qwen:plus china
+if [[ "$model" != "open" ]] && [[ "$model" == *:* ]] && is_known_model "$model"; then
+    model_variant="${model#*:}"
+    model="${model%%:*}"
+
+    # 检查 variant 本身是否还包含冒号 (qwen:plus:china 格式)
+    if [[ "$model_variant" == *:* ]]; then
+        embedded_region="${model_variant#*:}"
+        model_variant="${model_variant%%:*}"
+        # 如果嵌入的区域是有效区域，设置为 region_arg
+        if [[ "$embedded_region" =~ ^(global|china|cn)$ ]]; then
+            region_arg="$embedded_region"
+        fi
+    fi
+fi
+
+# Account-only mode: `ccc <account>` (not open, not known model, no colon, no variant)
+if [[ "$model" != "open" ]] && [[ -z "$model_variant" ]] && ! is_known_model "$model" && [[ ! "$model" =~ ^- ]]; then
     account="$model"
     # 1) Switch account directly (no eval)
     if ! "$CCM" switch-account "$account"; then
@@ -95,26 +135,45 @@ else
     if [[ "$model" == "open" ]]; then
         eval "$("$CCM" open "$open_provider")"
     else
+        # 处理区域参数（第二个参数）- 仅当未从冒号语法解析时
+        if [[ -z "$region_arg" ]] && [[ "${1:-}" =~ ^(global|china|cn)$ ]]; then
+            region_arg="$1"
+            shift || true
+        fi
+
+        # 设置默认区域
         case "$model" in
-            kimi|kimi2|qwen|glm|glm4|glm4.6|glm4.7|minimax|mm)
-                if [[ "${1:-}" =~ ^(global|china|cn)$ ]]; then
-                    region_arg="$1"
-                    shift || true
-                else
-                    region_arg="china"  # 默认 china
+            ali|alibaba|kimi|kimi2|glm|glm4|glm4.6|glm4.7|minimax|mm)
+                if [[ -z "$region_arg" ]]; then
+                    region_arg="china"
                 fi
                 ;;
             seed|doubao)
-                if [[ "${1:-}" =~ ^(doubao|glm|glm4|glm4.7|deepseek|ds|kimi|kimi2)$ ]]; then
-                    seed_variant="$1"
+                # seed 使用 variant 参数，不是 region
+                if [[ -z "$model_variant" ]] && [[ "${1:-}" =~ ^(doubao|glm|glm4|glm4.7|deepseek|ds|kimi|kimi2)$ ]]; then
+                    model_variant="$1"
                     shift || true
                 fi
                 ;;
         esac
 
-        if [[ -n "$seed_variant" ]]; then
-            eval "$("$CCM" "$model" "$seed_variant")"
+        # 调用 ccm 传递参数
+        if [[ "$model" == "seed" || "$model" == "doubao" ]]; then
+            # seed 使用第二个参数作为 variant
+            if [[ -n "$model_variant" ]]; then
+                eval "$("$CCM" "$model" "$model_variant")"
+            else
+                eval "$("$CCM" "$model")"
+            fi
+        elif [[ -n "$model_variant" ]]; then
+            # 新语法: provider:variant [region]
+            if [[ -n "$region_arg" ]]; then
+                eval "$("$CCM" "$model" "$model_variant" "$region_arg")"
+            else
+                eval "$("$CCM" "$model" "$model_variant")"
+            fi
         elif [[ -n "$region_arg" ]]; then
+            # 旧语法: provider [region]
             eval "$("$CCM" "$model" "$region_arg")"
         else
             eval "$("$CCM" "$model")"
