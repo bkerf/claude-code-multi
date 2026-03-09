@@ -92,6 +92,9 @@ def switch_provider(
     region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china",
 ):
     """Switch to a provider and output export statements."""
+    # Debug: print received parameters
+    console.print(f"[dim]🔧 Parameters: provider={provider_type.value}, variant={variant}, region={region}[/dim]")
+
     config = get_config()
     provider_name = provider_type.value
 
@@ -139,6 +142,19 @@ def switch_provider(
     shell = get_shell()
     exports = provider.format_exports(provider_config, shell)
     print(exports)
+
+    # Print environment variables (like Windows does)
+    env_vars = provider.get_env_exports(provider_config)
+    console.print("\n[blue]📋 Environment Variables[/blue]")
+    for key, val in env_vars.items():
+        if val is not None:
+            # Mask sensitive tokens
+            if "TOKEN" in key or "API_KEY" in key or "AUTH" in key:
+                masked = f"{val[:4]}...{val[-4:]}" if len(val) > 8 else "****"
+                console.print(f"   {key}='{masked}'")
+            else:
+                console.print(f"   {key}='{val}'")
+    console.print()
 
 
 # ============================================================================
@@ -449,7 +465,7 @@ def main(
     """Claude Code Model Switcher - Cross-platform CLI to switch AI providers."""
     if version:
         console.print(f"ccm version {__version__}")
-        raise typer.Exit()
+        sys.exit(0)
     # If no subcommand provided, show help
     if len(sys.argv) == 1:
         console.print("\n[bold yellow]Usage:[/bold yellow] ccm <command> [options]")
@@ -481,7 +497,12 @@ def main(
         console.print("  eval \"$(ccm deepseek)\"     # Switch to DeepSeek")
         console.print("  eval \"$(ccm kimi china)\"  # Switch to Kimi China")
         console.print("  eval \"$(ccm ali qwen)\"   # Switch to Alibaba with Qwen")
-        raise typer.Exit()
+        sys.exit(0)
+
+
+def run():
+    """Entry point for the CLI."""
+    app()
 
 
 if __name__ == "__main__":

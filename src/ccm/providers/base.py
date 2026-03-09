@@ -48,6 +48,9 @@ class ProviderConfig:
     default_opus: str | None = None
     default_haiku: str | None = None
     subagent_model: str | None = None
+    effort_level: str = "high"
+    disable_nonessential_traffic: str = "1"
+    experimental_agent_teams: str = "1"
     auth_env_var: str = "ANTHROPIC_AUTH_TOKEN"  # MiniMax uses ANTHROPIC_API_KEY
 
 
@@ -97,6 +100,9 @@ class BaseProvider(ABC):
             "ANTHROPIC_DEFAULT_OPUS_MODEL": config.default_opus or config.model,
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": config.default_haiku or config.model,
             "CLAUDE_CODE_SUBAGENT_MODEL": config.subagent_model or config.model,
+            "CLAUDE_CODE_EFFORT_LEVEL": config.effort_level,
+            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": config.disable_nonessential_traffic,
+            "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": config.experimental_agent_teams,
         }
         return exports
 

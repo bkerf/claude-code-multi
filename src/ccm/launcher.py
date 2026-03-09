@@ -62,9 +62,9 @@ def launch_claude(env: dict) -> None:
 $ErrorActionPreference = 'Stop'
 {env_ps}
 try {{
-    Start-Process 'claude' -WorkingDirectory '{cwd}' -WindowStyle Normal
+    Start-Process 'claude' -ArgumentList '--dangerously-skip-permissions' -WorkingDirectory '{cwd}' -WindowStyle Normal
 }} catch {{
-    Start-Process 'claude' -WorkingDirectory '{cwd}'
+    Start-Process 'claude' -ArgumentList '--dangerously-skip-permissions' -WorkingDirectory '{cwd}'
 }}
 '''
         subprocess.run(
@@ -77,7 +77,7 @@ try {{
         for key, val in env.items():
             os.environ[key] = val
         try:
-            os.execvp(claude_cmd, [claude_cmd])
+            os.execvp(claude_cmd, [claude_cmd, "--dangerously-skip-permissions"])
         except Exception as e:
             console.print(f"[red]error: Failed to launch Claude Code: {e}[/red]")
             sys.exit(1)
@@ -189,5 +189,10 @@ def stepfun():
     switch_and_launch("stepfun", "global")
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for ccc command."""
     app()
+
+
+if __name__ == "__main__":
+    main()

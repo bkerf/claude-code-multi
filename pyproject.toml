@@ -43,7 +43,7 @@ dev = [
 ]
 
 [project.scripts]
-ccm = "ccm.cli:main"
+ccm = "ccm.cli:run"
 ccc = "ccm.launcher:main"
 
 [project.urls]

@@ -70,6 +70,9 @@ def write_user_settings(
             "ANTHROPIC_DEFAULT_OPUS_MODEL": provider_config.default_opus or provider_config.model,
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": provider_config.default_haiku or provider_config.model,
             "CLAUDE_CODE_SUBAGENT_MODEL": provider_config.subagent_model or provider_config.model,
+            "CLAUDE_CODE_EFFORT_LEVEL": provider_config.effort_level,
+            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": provider_config.disable_nonessential_traffic,
+            "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": provider_config.experimental_agent_teams,
         }
     }
     if provider_config.auth_token:
