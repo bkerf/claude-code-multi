@@ -300,20 +300,48 @@ ccc claude:personal       # Switch to 'personal' account + use Claude
 ~/.ccm_config
 ```
 
-### Full Config Example
+### Quick Setup
 ```bash
-# Language (en or zh)
-CCM_LANGUAGE=en
+# Copy sample config and edit
+cp ccm_config.example ~/.ccm_config
+ccm config  # Open in editor
+```
 
-# API Keys (required for each provider)
-DEEPSEEK_API_KEY=sk-...
-KIMI_API_KEY=...
-GLM_API_KEY=...
-QWEN_API_KEY=...
-MINIMAX_API_KEY=...
-ARK_API_KEY=...
-OPENROUTER_API_KEY=...
-CLAUDE_API_KEY=...
+### Multi-Variant Providers
+
+Some providers support multiple models with a **unified API key**:
+
+| Provider | API Key | Variants (CLI) | Example |
+|----------|---------|----------------|---------|
+| **Alibaba** | `QWEN_API_KEY` | `qwen`, `kimi`, `glm`, `minimax` | `ccm ali kimi china` |
+| **Seed/Doubao** | `ARK_API_KEY` | `doubao`, `glm`, `deepseek`, `kimi` | `ccm seed glm` |
+| **OpenRouter** | `OPENROUTER_API_KEY` | `claude`, `kimi`, `glm`, `deepseek`, ... | `ccm open claude` |
+
+**Key insight:** Variants are specified via CLI, not in config file. One API key covers all variants.
+
+```bash
+# Alibaba: One key, 4 models
+QWEN_API_KEY=sk-xxx     # Works for qwen, kimi, glm, minimax
+
+# Then switch models via CLI:
+ccm ali qwen            # → qwen3.5-plus
+ccm ali kimi global     # → kimi-k2.5 (global region)
+ccm ali glm china       # → glm-5 (china region)
+```
+
+### Full Config Example
+
+See [ccm_config.example](ccm_config.example) for a complete annotated sample.
+
+```bash
+# ~/.ccm_config - API Keys
+DEEPSEEK_API_KEY=sk-xxx
+KIMI_API_KEY=sk-xxx
+GLM_API_KEY=sk-xxx
+QWEN_API_KEY=sk-xxx     # Unified key for ali variants
+MINIMAX_API_KEY=sk-xxx
+ARK_API_KEY=sk-xxx      # Unified key for seed variants
+OPENROUTER_API_KEY=sk-or-xxx
 
 # Model ID Overrides (optional)
 DEEPSEEK_MODEL=deepseek-chat

@@ -291,20 +291,48 @@ ccc claude:personal       # 切换到 'personal' 账号 + 使用 Claude
 ~/.ccm_config
 ```
 
-### 完整配置示例
+### 快速配置
 ```bash
-# 语言（en 或 zh）
-CCM_LANGUAGE=zh
+# 复制示例配置并编辑
+cp ccm_config.example ~/.ccm_config
+ccm config  # 用编辑器打开
+```
 
-# API Keys（每个提供商需要对应的密钥）
-DEEPSEEK_API_KEY=sk-...
-KIMI_API_KEY=...
-GLM_API_KEY=...
-QWEN_API_KEY=...
-MINIMAX_API_KEY=...
-ARK_API_KEY=...
-OPENROUTER_API_KEY=...
-CLAUDE_API_KEY=...
+### 多变体 Provider
+
+部分 Provider 使用**统一 API Key**，支持多个模型：
+
+| Provider | API Key | 变体（命令行指定） | 示例 |
+|----------|---------|-------------------|------|
+| **阿里云** | `QWEN_API_KEY` | `qwen`, `kimi`, `glm`, `minimax` | `ccm ali kimi china` |
+| **豆包/Seed** | `ARK_API_KEY` | `doubao`, `glm`, `deepseek`, `kimi` | `ccm seed glm` |
+| **OpenRouter** | `OPENROUTER_API_KEY` | `claude`, `kimi`, `glm`, `deepseek`, ... | `ccm open claude` |
+
+**关键点**：变体通过命令行指定，无需在配置文件中预设。一个 API Key 覆盖所有变体。
+
+```bash
+# 阿里云：一个 Key，4 个模型
+QWEN_API_KEY=sk-xxx     # 适用于 qwen, kimi, glm, minimax
+
+# 通过命令行切换模型：
+ccm ali qwen            # → qwen3.5-plus
+ccm ali kimi global     # → kimi-k2.5（海外区域）
+ccm ali glm china       # → glm-5（国内区域）
+```
+
+### 完整配置示例
+
+详见 [ccm_config.example](ccm_config.example) 完整注释版。
+
+```bash
+# ~/.ccm_config - API Keys
+DEEPSEEK_API_KEY=sk-xxx
+KIMI_API_KEY=sk-xxx
+GLM_API_KEY=sk-xxx
+QWEN_API_KEY=sk-xxx     # 阿里云变体统一 Key
+MINIMAX_API_KEY=sk-xxx
+ARK_API_KEY=sk-xxx      # 豆包变体统一 Key
+OPENROUTER_API_KEY=sk-or-xxx
 
 # 模型 ID 覆盖（可选）
 DEEPSEEK_MODEL=deepseek-chat
