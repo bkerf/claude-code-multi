@@ -8,6 +8,10 @@ Switch Claude Code between AI providers with one command.
 
 [中文文档](README_CN.md)
 
+## Windows 安装
+
+Windows 用户请参考：[Windows 安装与运行指南](docs/WINDOWS_INSTALL.md)
+
 ## Quick Start
 
 ```bash
@@ -39,6 +43,8 @@ ccm switch-account work  # switch to saved account
 ---
 
 ## Installation
+
+> **Windows 用户**: 请参考 [Windows 安装指南](docs/WINDOWS_INSTALL.md)
 
 ### Quick Install (Recommended)
 ```bash
@@ -148,13 +154,7 @@ ccc ali:kimi          # kimi-k2.5, china region
 ### Check Status
 ```bash
 ccm status             # Show current model and API key status
-ccm current-account    # Show current Claude Pro account
-```
-
-### Update Config
-When model IDs change in new versions, update your config:
-```bash
-ccm update-config      # Update outdated model IDs to latest defaults
+ccm account current    # Show current Claude Pro account
 ```
 
 ### Get Help
@@ -233,19 +233,19 @@ Switch between multiple Claude Pro subscriptions:
 
 ```bash
 # Save current logged-in account
-ccm save-account work
+ccm account save work
 
 # Switch to saved account
-ccm switch-account work
+ccm account switch work
 
 # List all saved accounts
-ccm list-accounts
+ccm account list
 
 # Show current account
-ccm current-account
+ccm account current
 
 # Delete saved account
-ccm delete-account work
+ccm account delete work
 ```
 
 ### User-Level Settings (Highest Priority)

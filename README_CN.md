@@ -8,6 +8,10 @@
 
 [English](README.md)
 
+## Windows 安装
+
+Windows 用户请参考：[Windows 安装与运行指南](docs/WINDOWS_INSTALL.md)
+
 ## 快速开始
 
 ```bash
@@ -32,13 +36,15 @@ ccm user reset           # 恢复环境变量控制
 ccm project glm china    # 仅此项目使用 GLM
 
 # 进阶：多个 Claude Pro 账号
-ccm save-account work    # 保存当前账号
-ccm switch-account work  # 切换到已保存账号
+ccm account save work    # 保存当前账号
+ccm account switch work  # 切换到已保存账号
 ```
 
 ---
 
 ## 安装
+
+> **Windows 用户**: 请参考 [Windows 安装指南](docs/WINDOWS_INSTALL.md)
 
 ### 快速安装（推荐）
 ```bash
@@ -148,13 +154,7 @@ ccc ali:kimi          # kimi-k2.5，国内
 ### 查看状态
 ```bash
 ccm status             # 显示当前模型和 API Key 状态
-ccm current-account    # 显示当前 Claude Pro 账号
-```
-
-### 更新配置
-当新版本的模型 ID 发生变化时，更新你的配置：
-```bash
-ccm update-config      # 更新过时的模型 ID 到最新默认值
+ccm account current    # 显示当前 Claude Pro 账号
 ```
 
 ### 获取帮助
@@ -210,10 +210,19 @@ ccm seed kimi         # kimi-k2.5
 ### OpenRouter
 ```bash
 ccm open              # 显示帮助
-ccm open glm          # 通过 OpenRouter 使用 GLM
 ccm open claude       # 通过 OpenRouter 使用 Claude
+ccm open glm          # 通过 OpenRouter 使用 GLM
+ccm open kimi         # 通过 OpenRouter 使用 Kimi
 ccm open deepseek     # 通过 OpenRouter 使用 DeepSeek
+ccm open qwen         # 通过 OpenRouter 使用 Qwen
+ccm open minimax      # 通过 OpenRouter 使用 MiniMax
+ccm open stepfun      # 通过 OpenRouter 使用 StepFun
+ccm open sf-free      # StepFun 免费版
 ```
+
+**可用提供商：** `claude`, `glm`, `kimi`, `deepseek`, `qwen`, `minimax`, `stepfun`
+
+**免费版：** `stepfun-free` 或 `sf-free` 使用 StepFun 的免费模型
 
 ---
 
@@ -224,19 +233,19 @@ ccm open deepseek     # 通过 OpenRouter 使用 DeepSeek
 
 ```bash
 # 保存当前登录的账号
-ccm save-account work
+ccm account save work
 
 # 切换到已保存的账号
-ccm switch-account work
+ccm account switch work
 
 # 列出所有已保存的账号
-ccm list-accounts
+ccm account list
 
 # 显示当前账号
-ccm current-account
+ccm account current
 
 # 删除已保存的账号
-ccm delete-account work
+ccm account delete work
 ```
 
 ### 用户级设置（最高优先级）
