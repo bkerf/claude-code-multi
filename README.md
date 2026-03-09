@@ -3,8 +3,8 @@
 [English](README.md) | [中文](README_CN.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/issues)
+[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/issues)
 
 Run different AI models in parallel across multiple terminal sessions for collaborative workflows.
 
@@ -13,8 +13,8 @@ Run different AI models in parallel across multiple terminal sessions for collab
 
 ```bash
 # 1. Install
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./install.sh
 
 # 2. Reload shell
@@ -46,8 +46,8 @@ ccm account switch work  # switch to saved account
 ### Mac & Linux
 
 ```bash
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./install.sh
 source ~/.zshrc  # or ~/.bashrc
 ```
@@ -58,18 +58,18 @@ See [Windows Installation Guide](docs/WINDOWS_INSTALL.md)
 
 Quick start:
 ```powershell
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 pip install -e .
 ```
 
 ### Install Modes
 
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **User** (default) | `./install.sh` | Personal use, available everywhere |
-| **System** | `./install.sh --system` | Shared machine, all users |
-| **Project** | `./install.sh --project` | Project-specific, isolated setup |
+| Mode               | Command                  | Use Case                           |
+| ------------------ | ------------------------ | ---------------------------------- |
+| **User** (default) | `./install.sh`           | Personal use, available everywhere |
+| **System**         | `./install.sh --system`  | Shared machine, all users          |
+| **Project**        | `./install.sh --project` | Project-specific, isolated setup   |
 
 ### Install Options
 ```bash
@@ -211,19 +211,19 @@ Each terminal session maintains its own model selection. This enables:
 
 ### Direct Providers (API Key Required)
 
-| Provider | Command | Region | Base URL |
-|----------|---------|--------|----------|
-| Alibaba | `ccm ali [variant] [global\|china]` | global | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
-| | | china (default) | `coding.dashscope.aliyuncs.com/apps/anthropic` |
-| GLM | `ccm glm [global\|china]` | global (default) | `api.z.ai/api/anthropic` |
-| | | china | `open.bigmodel.cn/api/anthropic` |
-| DeepSeek | `ccm deepseek` | - | `api.deepseek.com/anthropic` |
-| Kimi | `ccm kimi [global\|china]` | global (default) | `api.moonshot.ai/anthropic` |
-| | | china | `api.moonshot.cn/anthropic` |
-| MiniMax | `ccm minimax [global\|china]` | global (default) | `api.minimax.io/anthropic` |
-| | | china | `api.minimaxi.com/anthropic` |
-| Seed/Doubao | `ccm seed [variant]` | - | `ark.cn-beijing.volces.com/api/coding` |
-| Claude | `ccm claude` | - | `api.anthropic.com` |
+| Provider    | Command                             | Region           | Base URL                                            |
+| ----------- | ----------------------------------- | ---------------- | --------------------------------------------------- |
+| Alibaba     | `ccm ali [variant] [global\|china]` | global           | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
+|             |                                     | china (default)  | `coding.dashscope.aliyuncs.com/apps/anthropic`      |
+| GLM         | `ccm glm [global\|china]`           | global (default) | `api.z.ai/api/anthropic`                            |
+|             |                                     | china            | `open.bigmodel.cn/api/anthropic`                    |
+| DeepSeek    | `ccm deepseek`                      | -                | `api.deepseek.com/anthropic`                        |
+| Kimi        | `ccm kimi [global\|china]`          | global (default) | `api.moonshot.ai/anthropic`                         |
+|             |                                     | china            | `api.moonshot.cn/anthropic`                         |
+| MiniMax     | `ccm minimax [global\|china]`       | global (default) | `api.minimax.io/anthropic`                          |
+|             |                                     | china            | `api.minimaxi.com/anthropic`                        |
+| Seed/Doubao | `ccm seed [variant]`                | -                | `ark.cn-beijing.volces.com/api/coding`              |
+| Claude      | `ccm claude`                        | -                | `api.anthropic.com`                                 |
 
 > **Alibaba Coding Plan**: [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com/)
 >
@@ -242,12 +242,12 @@ ccm seed kimi         # kimi-k2.5
 
 ### Alibaba Cloud Coding Plan Models
 
-| Variant | Model ID | Description |
-|---------|----------|-------------|
-| `qwen` | qwen3.5-plus | Multimodal (image understanding) |
-| `kimi` | kimi-k2.5 | Multimodal (image understanding) |
-| `glm` | glm-5 | General purpose |
-| `minimax` | MiniMax-M2.5 | General purpose |
+| Variant   | Model ID     | Description                      |
+| --------- | ------------ | -------------------------------- |
+| `qwen`    | qwen3.5-plus | Multimodal (image understanding) |
+| `kimi`    | kimi-k2.5    | Multimodal (image understanding) |
+| `glm`     | glm-5        | General purpose                  |
+| `minimax` | MiniMax-M2.5 | General purpose                  |
 
 ### OpenRouter
 ```bash
@@ -353,11 +353,11 @@ ccm config  # Open in editor
 
 Some providers support multiple models with a **unified API key**:
 
-| Provider | API Key | Variants (CLI) | Example |
-|----------|---------|----------------|---------|
-| **Alibaba** | `QWEN_API_KEY` | `qwen`, `kimi`, `glm`, `minimax` | `ccm ali kimi china` |
-| **Seed/Doubao** | `ARK_API_KEY` | `doubao`, `glm`, `deepseek`, `kimi` | `ccm seed glm` |
-| **OpenRouter** | `OPENROUTER_API_KEY` | `claude`, `kimi`, `glm`, `deepseek`, ... | `ccm open claude` |
+| Provider        | API Key              | Variants (CLI)                           | Example              |
+| --------------- | -------------------- | ---------------------------------------- | -------------------- |
+| **Alibaba**     | `QWEN_API_KEY`       | `qwen`, `kimi`, `glm`, `minimax`         | `ccm ali kimi china` |
+| **Seed/Doubao** | `ARK_API_KEY`        | `doubao`, `glm`, `deepseek`, `kimi`      | `ccm seed glm`       |
+| **OpenRouter**  | `OPENROUTER_API_KEY` | `claude`, `kimi`, `glm`, `deepseek`, ... | `ccm open claude`    |
 
 **Key insight:** Variants are specified via CLI, not in config file. One API key covers all variants.
 
@@ -430,7 +430,7 @@ eval "$(./ccm.sh glm china)"
 Contributions are welcome! Here's how you can help:
 
 ### Report Issues
-Found a bug or have a feature request? [Open an issue](https://github.com/bkerf/claude-code-switch/issues).
+Found a bug or have a feature request? [Open an issue](https://github.com/bkerf/claude-code-multi/issues).
 
 ### Submit Code
 1. Fork the repository
@@ -441,8 +441,8 @@ Found a bug or have a feature request? [Open an issue](https://github.com/bkerf/
 
 ### Development
 ```bash
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./ccm.sh help    # Test locally without installing
 ```
 

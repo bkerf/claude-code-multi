@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "claude-code-switch"
+name = "claude-code-multi"
 version = "3.0.0"
 description = "Cross-platform CLI to switch Claude Code AI providers"
 readme = "README.md"
@@ -47,8 +47,8 @@ ccm = "ccm.cli:main"
 ccc = "ccm.launcher:main"
 
 [project.urls]
-Homepage = "https://github.com/peng/claude-code-switch"
-Repository = "https://github.com/peng/claude-code-switch"
+Homepage = "https://github.com/peng/claude-code-multi"
+Repository = "https://github.com/peng/claude-code-multi"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ccm"]

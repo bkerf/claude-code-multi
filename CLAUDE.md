@@ -17,22 +17,22 @@ ccm list                   # 列出所有 provider
 
 ## Provider
 
-| 命令              | 提供商             | 说明                  | 区域 |
-| ----------------- | ------------------ | --------------------- | ---- |
-| `ali <variant>`   | 阿里云 Coding Plan | qwen/kimi/glm/minimax | Yes  |
-| `kimi`            | Kimi (月之暗面)    | 直连                  | Yes  |
-| `glm`             | GLM (智谱)         | 直连                  | Yes  |
-| `minimax`         | MiniMax            | 直连                  | Yes  |
-| `deepseek`        | DeepSeek           | -                     | No   |
-| `seed [variant]`  | 豆包/ARK           | doubao/glm/deepseek/kimi | No   |
-| `stepfun`         | StepFun (阶跃)     | -                     | No   |
-| `claude`          | Claude (官方)      | -                     | No   |
-| `open <provider>` | OpenRouter         | claude/kimi/deepseek/glm/ali/minimax/stepfun/stepfun-free | No |
+| 命令              | 提供商             | 说明                                                      | 区域 |
+| ----------------- | ------------------ | --------------------------------------------------------- | ---- |
+| `ali <variant>`   | 阿里云 Coding Plan | qwen/kimi/glm/minimax                                     | Yes  |
+| `kimi`            | Kimi (月之暗面)    | 直连                                                      | Yes  |
+| `glm`             | GLM (智谱)         | 直连                                                      | Yes  |
+| `minimax`         | MiniMax            | 直连                                                      | Yes  |
+| `deepseek`        | DeepSeek           | -                                                         | No   |
+| `seed [variant]`  | 豆包/ARK           | doubao/glm/deepseek/kimi                                  | No   |
+| `stepfun`         | StepFun (阶跃)     | -                                                         | No   |
+| `claude`          | Claude (官方)      | -                                                         | No   |
+| `open <provider>` | OpenRouter         | claude/kimi/deepseek/glm/ali/minimax/stepfun/stepfun-free | No   |
 
 ## 项目结构
 
 ```
-claude-code-switch/
+claude-code-multi/
 ├── src/ccm/
 │   ├── cli.py             # CLI 入口 (switch, status, list, set)
 │   ├── launcher.py        # ccc 启动器

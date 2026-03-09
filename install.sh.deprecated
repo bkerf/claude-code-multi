@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DEPRECATED: 此脚本已废弃，请使用 pip install claude-code-switch
+# DEPRECATED: 此脚本已废弃，请使用 pip install claude-code-multi
 # 此文件仅保留用于参考，将在后续版本中移除
 
 set -euo pipefail
@@ -9,7 +9,7 @@ set -euo pipefail
 # Optional: system-level, project-level, rc-function injection, legacy cleanup
 
 # GitHub repository info
-GITHUB_REPO="${GITHUB_REPO:-bkerf/claude-code-switch}"
+GITHUB_REPO="${GITHUB_REPO:-bkerf/claude-code-multi}"
 GITHUB_BRANCH="${GITHUB_BRANCH:-main}"
 GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}"
 
@@ -300,7 +300,7 @@ ccc() {
     model="\$1"
     shift || true
   fi
-  
+
   # Helper: known model keyword
   _is_known_model() {
     case "\$1" in

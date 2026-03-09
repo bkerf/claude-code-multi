@@ -2,7 +2,7 @@
 ############################################################
 # DEPRECATED: 此脚本已废弃，请使用 Python 版本
 # ---------------------------------------------------------
-# 安装: pip install claude-code-switch
+# 安装: pip install claude-code-multi
 # 使用: ccm <provider> [region]
 ############################################################
 
@@ -12,7 +12,7 @@
 # ============================================================
 
 # 如果你看到此消息，请安装新版:
-#   pip install claude-code-switch
+#   pip install claude-code-multi
 #
 # 新版本功能更强，跨平台支持更好
 ############################################################
@@ -252,7 +252,7 @@ EOF
         echo -e "${GREEN}🚀 Using default experience keys for now...${NC}" >&2
         # Don't return 1 - continue with default fallback keys
     fi
-    
+
     # 首先读取语言设置
     if [[ -f "$CONFIG_FILE" ]]; then
         local config_lang
@@ -278,7 +278,7 @@ EOF
         # 去掉首尾空白
         line=$(echo "$line" | sed -E 's/^[[:space:]]*//; s/[[:space:]]*$//')
         [[ -z "$line" ]] && continue
-        
+
         # 解析 export KEY=VALUE 或 KEY=VALUE
         if [[ "$line" =~ ^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=(.*)$ ]]; then
             local key="${BASH_REMATCH[2]}"
@@ -298,7 +298,7 @@ EOF
             fi
         fi
     done < "$CONFIG_FILE"
-    
+
     # 执行临时文件中的export语句
     if [[ -s "$temp_file" ]]; then
         source "$temp_file"
@@ -1929,7 +1929,7 @@ edit_config() {
 
     echo -e "${BLUE}🔧 $(t 'opening_config_file')...${NC}"
     echo -e "${YELLOW}$(t 'config_file_path'): $CONFIG_FILE${NC}"
-    
+
     # 按优先级尝试不同的编辑器
     if command -v cursor >/dev/null 2>&1; then
         echo -e "${GREEN}✅ $(t 'using_cursor')${NC}"

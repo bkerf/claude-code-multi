@@ -27,8 +27,8 @@ main() {
     local pip
     pip=$(check_pip)
 
-    log_info "Installing claude-code-switch via $pip..."
-    $pip install -U claude-code-switch
+    log_info "Installing claude-code-multi via $pip..."
+    $pip install -U claude-code-multi
 
     log_info "Installation complete!"
 

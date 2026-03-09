@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DEPRECATED: 此脚本已废弃，请使用 pip uninstall claude-code-switch
+# DEPRECATED: 此脚本已废弃，请使用 pip uninstall claude-code-multi
 # 此文件仅保留用于参考，将在后续版本中移除
 
 set -euo pipefail

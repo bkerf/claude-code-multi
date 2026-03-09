@@ -3,8 +3,8 @@
 [English](README.md) | [中文](README_CN.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/issues)
+[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/issues)
 
 在多个终端会话中并行运行不同的 AI 模型，实现多模型协同工作。
 
@@ -13,8 +13,8 @@
 
 ```bash
 # 1. 安装
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./install.sh
 
 # 2. 重载 shell
@@ -46,8 +46,8 @@ ccm account switch work  # 切换到已保存账号
 ### Mac & Linux
 
 ```bash
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./install.sh
 source ~/.zshrc  # 或 ~/.bashrc
 ```
@@ -58,8 +58,8 @@ source ~/.zshrc  # 或 ~/.bashrc
 
 快速开始：
 ```powershell
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 pip install -e .
 ```
 
@@ -430,7 +430,7 @@ eval "$(./ccm.sh glm china)"
 欢迎贡献！以下是参与方式：
 
 ### 报告问题
-发现 Bug 或有功能建议？[提交 Issue](https://github.com/bkerf/claude-code-switch/issues)。
+发现 Bug 或有功能建议？[提交 Issue](https://github.com/bkerf/claude-code-multi/issues)。
 
 ### 提交代码
 1. Fork 本仓库
@@ -441,8 +441,8 @@ eval "$(./ccm.sh glm china)"
 
 ### 开发
 ```bash
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ./ccm.sh help    # 本地测试（无需安装）
 ```
 

@@ -11,8 +11,8 @@
 ### 1. 克隆项目
 
 ```powershell
-git clone https://github.com/bkerf/claude-code-switch.git
-cd claude-code-switch
+git clone https://github.com/bkerf/claude-code-multi.git
+cd claude-code-multi
 ```
 
 ### 2. 安装 Python 依赖
