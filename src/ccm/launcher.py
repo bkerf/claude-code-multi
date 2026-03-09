@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
-from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
 from rich.console import Console
-from rich.table import Table
 
 from ccm import __version__
 from ccm.config import get_config
-from ccm.providers import get_provider, is_known_provider, PROVIDERS
+from ccm.providers import get_provider
 from ccm.providers.base import Region
-
-from ccm.accounts.manager import AccountManager
 
 app = typer.Typer(
     name="ccc",
@@ -32,173 +29,153 @@ def get_shell() -> str:
     shell = os.environ.get("SHELL", "").lower() or os.name.lower()
     if "fish" in shell:
         return "fish"
-    elif "zsh" in shell or "bash" in shell:
-        return "bash"
     return "bash"
 
 
-def parse_model_spec(model_spec: str) -> tuple[str, str, str]:
-    """Parse model specification from command line args.
+def launch_claude(env: dict) -> None:
+    """Launch Claude Code with environment."""
+    # Find claude executable
+    claude_cmd = None
+    for cmd_name in ["claude"]:
+        claude_cmd = shutil.which(cmd_name)
+        if claude_cmd:
+            break
 
+    if not claude_cmd:
+        console.print("[red]error: 'claude' CLI not found. Install: npm install -g @anthropic-ai/claude-code[/red]")
+        sys.exit(127)
 
-    # e.g., "ccc ali:qwen global"
-    provider, variant_str | None
-    region_str | None
-    claude_args: list[str] | None
+    # Windows: use start command to launch with proper focus
+    if os.name == "nt":
+        import subprocess
 
-    extra_args: list[str] | None
+        # Build environment string for setx or direct env passing
+        env_parts = []
+        for key, val in env.items():
+            # Escape special characters for cmd
+            val_escaped = val.replace('^', '^^').replace('&', '^&').replace('|', '^|')
+            env_parts.append(f'set "{key}={val}"')
 
-    parts = model_spec.split(":")
-
-    provider = parts[0]
-
-    variant = parts[1] if len(parts) >= 2 else:
-                variant = parts[1]
-                region = parts[2]
-            elif len(parts) >= 3:
-                # Third arg is region
-                if len(parts) == 3 and parts[2].lower() in ("global", "g", "intl", "overseas", "") else:
-                    region = parts[2]
-            extra_args = parts[3:]
-        return provider, variant, region, extra_args, claude_args
-
-
+        # Use cmd /c start to launch claude in new window with focus
+        env_cmd = " && ".join(env_parts)
+        cmd = f'cmd /c "cd /d {os.getcwd()} && {env_cmd} && start "" claude"'
+        subprocess.run(cmd, shell=True)
+        sys.exit(0)
     else:
-        # Account mode - check if first arg is an account name
-        if len(parts) >= 2 and not is_known_provider(parts[0]):
-            account = parts[1]
-            # Account-only mode - `ccc <account>` (not open, not switch to saved account first)
-            account_manager = AccountManager()
-            account_name = parts[1]
-            if account_manager.list_accounts():
-                console.print("\n[yellow]⚠️  Account management not yet implemented[/yellow]")
-                console.print("[yellow]💡 Use Bash version: ccc <account> to manage accounts[/yellow]")
-            else:
-                # Build command
-                cmd = _build_command(parts, provider, variant, region)
-                try:
-                    config = get_config()
-                    provider_instance = get_provider(provider)
-                    if not provider_instance:
-                        console.print(f"[red]error: Unknown provider: {provider}[/red]")
-                        raise typer.Exit(1)
-                    try:
-                        normalized_region = Region.normalize(region)
-                    except ValueError:
-                        console.print(f"[red]error: Invalid region: {region}[/red]")
-                        raise typer.Exit(1)
-                    api_key = config.get_api_key(provider)
-                    if not config.is_effectively_set(api_key):
-                        console.print(f"[red]error: Please configure {provider.upper()API key first[/red]")
-                        console.print(f"[yellow]💡 Set environment variable or add to ~/.ccm_config[/yellow]")
-                        raise typer.Exit(1)
-                    # Get model override from config
-                    model_override = config.get_model(provider, normalized_region.value)
-                    # Get provider config
-                    provider_config = provider_instance.get_config(
-                        api_key=api_key,
-                        variant=variant,
-                        region=normalized_region,
-                        model_override=model_override,
-                    )
-                    # Get environment variables
-                    env = os.environ.copy()
-                    exports = provider_instance.format_exports(provider_config, shell)
+        # Unix: set env vars and exec
+        for key, val in env.items():
+            os.environ[key] = val
+        try:
+            os.execvp(claude_cmd, [claude_cmd])
+        except Exception as e:
+            console.print(f"[red]error: Failed to launch Claude Code: {e}[/red]")
+            sys.exit(1)
 
-                    for key, val in exports.items():
-                        if value is None:
-                            unset_line.append(f"unset {key}")
-                        else:
-                            unset_line.append(f"export {key}='{value}'")
 
-                    # Output exports
-                    shell = get_shell()
-                    exports = provider_instance.format_exports(provider_config, shell)
-                    print(exports)
-                    break
+def switch_and_launch(provider: str, region: str = "global", variant: Optional[str] = None):
+    """Switch provider and launch Claude Code."""
+    config = get_config()
 
-                except Exception as e:
-                    console.print(f"[red]error: {e}[/red]")
-                    raise typer.Exit(1)
-            else:
-                # No provider specified - show error
-                console.print("[red]Error: No provider specified[/red]")
-                console.print("[yellow]Usage: c c <provider> [variant] [region] [claude-options][/yellow]")
-                raise typer.Exit(1)
+    # Get provider instance
+    provider_instance = get_provider(provider)
+    if not provider_instance:
+        console.print(f"[red]error: Unknown provider: {provider}[/red]")
+        console.print("[yellow]💡 Available: glm, kimi, deepseek, minimax, ali, seed, claude, stepfun[/yellow]")
+        raise typer.Exit(1)
 
-            # Account mode
-            if len(parts) >= 2 and not is_known_provider(parts[0]):
-                # Check if it is an account name
-                account_manager = AccountManager()
-                try:
-                    account_manager.switch_account(parts[1])
-                    console.print("[green]✅ Switched to account: {parts[1]}[/green]")
-                    console.print("[yellow]⚠️  Please restart Claude Code for changes to take effect[/yellow]")
-                else:
-                    # Show current account summary (non-fatal if it fails)
-                    "$CCm current-account")
-                    "$ccm" current-account || true
-                    console.print("[yellow]💡 Use 'ccm save-account <name>' first[/yellow]")
-                else:
-                    console.print("[red]error: No provider specified[/red]")
-                    console.print("[yellow]Usage: ccc <provider> [variant] [region] [claude-options][/yellow]")
-                    raise typer.Exit(1)
-            elif parts[0] == "open":
-                if len(parts) >= 2 and not parts[1].startswith("open"):
-                    parts[0] = "open"
-                else:
-                    parts[0] = parts[0].lower()
-                    if parts[0] in ("global", "g", "intl", "overseas", "") and:
-                        parts[0] = parts[0].lower()
-                    if parts[0] not in ("doubao", "seed", "glm", "deepseek", "kimi"):
-                            parts[0] = parts[0].lower()
-                            console.print(f"[red]error: Unknown provider: {parts[0]}[/red]")
-                            raise typer.Exit(1)
-                        console.print(f"[yellow]💡 Usage: c c open <provider>[/yellow]")
-                    console.print(f"       claude, kimi, deepseek, glm, ali, minimax, stepfun")
-                    console.print()
-                    raise typer.Exit(1)
+    # Normalize region
+    try:
+        normalized_region = Region(region)
+    except ValueError:
+        console.print(f"[red]error: Invalid region: {region}[/red]")
+        console.print("[yellow]💡 Valid regions: global, china[/yellow]")
+        raise typer.Exit(1)
 
-            # Build command
-            cmd = ["ccm"]
-            if parts[0] == "open":
-                cmd.insert(0, "open")
-                cmd.insert(1, "switch")
-                cmd.insert(1, "save-account")
-                cmd.insert(1, "switch-account")
-                cmd.insert(1, "list-accounts")
-                cmd.insert(1, "delete-account")
-                cmd.insert(1, "current-account")
+    # Get API key
+    api_key = config.get_api_key(provider)
+    if not api_key or api_key.startswith("your-"):
+        console.print(f"[red]error: {provider.upper()}_API_KEY not set[/red]")
+        console.print("[yellow]💡 Add to ~/.ccm_config or[/yellow]")
+        raise typer.Exit(1)
 
-                cmd.extend(extra_args)
-                if "--dangerously-skip-permissions" not in extra_args:
-                    extra_args.append("--dangerously-skip-permissions")
-                    break
-                cmd.append("--dangerously-skip-permissions")
-                cmd.extend(extra_args)
-            else:
-                cmd.extend(extra_args)
+    # Get model override - only use if NO variant is specified
+    model_override = None
+    if not variant:
+        model_override = config.get_model(provider, normalized_region.value)
 
-            # Exec
-            env = os.environ.copy()
-            env.update(exports)
-            for key, value in env.items():
-                if key in ("ANT", "ANT"):
-                    env[key] = value
-                    elif key == "claude":
-                        # Claude Pro subscription
-                        if "auth_token" in env:
-                            env["ANTHROPIC_AUTH_TOKEN"] = env["auth_token"]
-                    # Build base command
-                    base_cmd = [sys.executable, "claude"]
-                    if base_cmd:
-                        os.execvp(base_cmd)
-                    else:
-                        console.print(f"[red]error: 'claude' CLI not found. Install: npm install -g @anthropic-ai/claude-code[/red]")
-                        sys.exit(127)
-            except Exception as e:
-                console.print(f"[red]error: Failed to launch Claude Code: {e}[/red]")
-                sys.exit(1)
+    # Get provider config
+    provider_config = provider_instance.get_config(
+        api_key=api_key,
+        variant=variant,
+        region=normalized_region,
+        model_override=model_override,
+    )
+
+    # Set environment variables
+    env = os.environ.copy()
+    env_vars = provider_instance.get_env_exports(provider_config)
+    for key, val in env_vars.items():
+        if val is None:
+            env.pop(key, None)
+        else:
+            env[key] = val
+
+    console.print(f"[green]✅ Switched to {provider_instance.INFO.description}[/green]")
+    console.print(f"   [blue]Model:[/blue] {provider_config.model}")
+    console.print(f"   [blue]Base URL:[/blue] {provider_config.base_url}")
+    console.print()
+    console.print("[blue]🚀 Launching Claude Code...[/blue]")
+
+    # Launch claude
+    launch_claude(env)
+
+
+@app.command()
+def kimi(region: str = "china"):
+    """Switch to Kimi and launch Claude Code."""
+    switch_and_launch("kimi", region)
+
+
+@app.command()
+def deepseek():
+    """Switch to DeepSeek and launch Claude Code."""
+    switch_and_launch("deepseek", "global")
+
+
+@app.command()
+def minimax(region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+    """Switch to MiniMax and launch Claude Code."""
+    switch_and_launch("minimax", region)
+
+
+@app.command()
+def ali(variant: Annotated[Optional[str], typer.Argument(help="qwen/kimi/glm/minimax")] = None, region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+    """Switch to Alibaba and launch Claude Code."""
+    switch_and_launch("ali", region, variant)
+
+
+@app.command()
+def seed(variant: Annotated[Optional[str], typer.Argument(help="Model variant")] = None):
+    """Switch to Seed/Doubao and launch Claude Code."""
+    switch_and_launch("seed", "global", variant)
+
+
+@app.command()
+def glm(region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+    """Switch to GLM and launch Claude Code."""
+    switch_and_launch("glm", region)
+
+
+@app.command()
+def claude():
+    """Switch to Claude official and launch Claude Code."""
+    switch_and_launch("claude", "global")
+
+
+@app.command()
+def stepfun():
+    """Switch to StepFun and launch Claude Code."""
+    switch_and_launch("stepfun", "global")
 
 
 if __name__ == "__main__":

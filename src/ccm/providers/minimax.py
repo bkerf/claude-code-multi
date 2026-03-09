@@ -43,4 +43,5 @@ class MiniMaxProvider(BaseProvider):
             default_opus=model,
             default_haiku=model,
             subagent_model=model,
+            auth_env_var="ANTHROPIC_AUTH_TOKEN",  # MiniMax uses AUTH_TOKEN
         )

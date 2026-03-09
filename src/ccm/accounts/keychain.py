@@ -91,7 +91,7 @@ class KeychainBackend:
             self._write_linux_credentials(credentials)
         elif self.system == "windows":
             self._write_windows_credentials(credentials)
-    def def _write_macos_keychain(self, credentials: dict[str, Any]) -> None:
+    def _write_macos_keychain(self, credentials: dict[str, Any]) -> None:
         """Write credentials to macOS Keychain."""
         import subprocess
         username = os.environ.get("USER", "unknown")

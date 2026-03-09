@@ -48,6 +48,7 @@ class ProviderConfig:
     default_opus: str | None = None
     default_haiku: str | None = None
     subagent_model: str | None = None
+    auth_env_var: str = "ANTHROPIC_AUTH_TOKEN"  # MiniMax uses ANTHROPIC_API_KEY
 
 
 class BaseProvider(ABC):
@@ -90,17 +91,12 @@ class BaseProvider(ABC):
         """
         exports: dict[str, str | None] = {
             "ANTHROPIC_BASE_URL": config.base_url,
-            "ANTHROPIC_API_URL": None,  # Unset
-            "ANTHROPIC_AUTH_TOKEN": config.auth_token,
-            "ANTHROPIC_API_KEY": None,  # Unset
+            config.auth_env_var: config.auth_token,
             "ANTHROPIC_MODEL": config.model,
-            "ANTHROPIC_SMALL_FAST_MODEL": config.model,
             "ANTHROPIC_DEFAULT_SONNET_MODEL": config.default_sonnet or config.model,
             "ANTHROPIC_DEFAULT_OPUS_MODEL": config.default_opus or config.model,
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": config.default_haiku or config.model,
             "CLAUDE_CODE_SUBAGENT_MODEL": config.subagent_model or config.model,
-            "API_TIMEOUT_MS": None,
-            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": None,
         }
         return exports
 
@@ -109,7 +105,7 @@ class BaseProvider(ABC):
 
         Args:
             config: Provider configuration
-            shell: Target shell (bash/zsh or fish)
+            shell: Target shell (bash/zsh, fish, or powershell)
 
         Returns:
             Shell commands to set environment variables
@@ -117,7 +113,13 @@ class BaseProvider(ABC):
         exports = self.get_env_exports(config)
         lines = []
 
-        if shell == "fish":
+        if shell == "powershell":
+            for key, value in exports.items():
+                if value is None:
+                    lines.append(f"Remove-Item Env:{key}")
+                else:
+                    lines.append(f'$env:{key} = "{value}"')
+        elif shell == "fish":
             for key, value in exports.items():
                 if value is None:
                     lines.append(f"set -e {key}")

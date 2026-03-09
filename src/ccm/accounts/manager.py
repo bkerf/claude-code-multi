@@ -77,14 +77,16 @@ class AccountManager:
         self.keychain.write_credentials(credentials)
         console.print(f"[green]✅ Switched to account: {name}[/green]")
         console.print("[yellow]⚠️  Please restart Claude Code for changes to take effect[/yellow]")
+
     def list_accounts(self) -> list[str]:
- | None:
         """List all saved Claude Pro accounts."""
         accounts = self._load_accounts()
         if not accounts:
             console.print("[yellow]No accounts saved yet[/yellow]")
             console.print("[yellow]💡 Use 'ccm account save <name>' to save an account[/yellow]")
-            return list(accounts.keys())
+            return []
+        return list(accounts.keys())
+
     def delete_account(self, name: str) -> None:
         """Delete a saved Claude Pro account."""
         accounts = self._load_accounts()

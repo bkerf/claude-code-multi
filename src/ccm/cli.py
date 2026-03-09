@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -28,7 +29,6 @@ app = typer.Typer(
     name="ccm",
     help="Claude Code Model Switcher - Cross-platform CLI to switch AI providers",
     add_completion=False,
-    rich_markup_help=True,
 )
 console = Console()
 
@@ -49,6 +49,9 @@ class ProviderType(str, Enum):
 def get_shell() -> str:
     """Detect current shell type."""
     shell = os.environ.get("SHELL", "").lower()
+    # Check for PowerShell on Windows
+    if os.name == "nt" or "PSModulePath" in os.environ:
+        return "powershell"
     if "fish" in shell:
         return "fish"
     elif "zsh" in shell or "bash" in shell:
@@ -109,8 +112,12 @@ def switch_provider(
     except ValueError as e:
         console.print(f"[red]❌ {e}[/red]")
         raise typer.Exit(1)
-    # Get model override from config
-    model_override = config.get_model(provider_name, normalized_region.value)
+    # Get model override from config - only use if NO variant is specified
+    # When variant is provided, let the provider handle model selection
+    model_override = None
+    if not variant:
+        model_override = config.get_model(provider_name, normalized_region.value)
+
     # Get provider config
     provider_config = provider.get_config(
         api_key=api_key,
@@ -127,7 +134,7 @@ def switch_provider(
         console.print(f"   [blue]Variant:[/blue] {variant}")
     console.print(f"   [blue]Model:[/blue] {provider_config.model}")
     console.print(f"   [blue]Base URL:[/blue] {provider_config.base_url}")
-    console()
+    console.print()
     # Output export statements
     shell = get_shell()
     exports = provider.format_exports(provider_config, shell)
@@ -161,7 +168,7 @@ def openrouter(
     console.print(f"\n[green]✅ Switched to OpenRouter ({provider})[/green]")
     console.print(f"   [blue]Model:[/blue] {provider_config.model}")
     console.print(f"   [blue]Base URL:[/blue] {provider_config.base_url}")
-    console()
+    console.print()
     # Output exports
     shell = get_shell()
     exports = provider_instance.format_exports(provider_config, shell)
@@ -179,12 +186,12 @@ def status():
     config = get_config()
 
     console.print("\n[blue]📊 Current Configuration[/blue]")
-    console.print(f"   BASE_URL: {os.environ.get('ANTHROPIC_BASE_URL', 'Default (Anthropic)')")
+    console.print(f"   BASE_URL: {os.environ.get('ANTHROPIC_BASE_URL', 'Default (Anthropic)')}")
     console.print(f"   AUTH_TOKEN: {mask_token(os.environ.get('ANTHROPIC_AUTH_TOKEN'))}")
     console.print(f"   MODEL: {os.environ.get('ANTHROPIC_MODEL', '[Not Set]')}")
     console.print(f"   SUBAGENT_MODEL: {os.environ.get('CLAUDE_CODE_SUBAGENT_MODEL', '[Not Set]')}")
-    console()
-    console.print("\n[blue]🔧 API Keys Status[/blue]")
+    console.print()
+    console.print("[blue]🔧 API Keys Status[/blue]")
     console.print(f"   GLM_API_KEY: {mask_presence(config.api_keys.glm)}")
     console.print(f"   KIMI_API_KEY: {mask_presence(config.api_keys.kimi)}")
     console.print(f"   MINIMAX_API_KEY: {mask_presence(config.api_keys.minimax)}")
@@ -195,7 +202,7 @@ def status():
     console.print()
 
 
-@app.command()
+@app.command(name="config")
 def config_cmd():
     """Open configuration file for editing."""
     config_path = Config.get_config_path()
@@ -207,12 +214,19 @@ def config_cmd():
     # Try editors in order
     editors = ["cursor", "code", "vim", "nano"]
     for editor in editors:
-        if shutil.which(editor):
-            console.print(f"[blue]🔧 Opening with {editor}...[/blue]")
-            subprocess.run([editor, str(config_path)])
-            return
-        continue
-    console.print(f"[yellow]No editor found. Edit manually: {config_path}[/yellow]")
+        editor_path = shutil.which(editor)
+        if editor_path:
+            try:
+                console.print(f"[blue]🔧 Opening with {editor}...[/blue]")
+                if sys.platform == "win32":
+                    os.startfile(str(config_path))
+                else:
+                    subprocess.run([editor, str(config_path)])
+                return
+            except Exception:
+                continue
+    console.print(f"[yellow]No editor found. Edit manually:[/yellow]")
+    console.print(f"[white]  {config_path}[/white]")
 
 
 @app.command(name="list")
@@ -262,7 +276,7 @@ def user_reset():
 
 
     console.print("[green]✅ Removed user-level settings[/green]")
-    console.print("[yellow]💡 Claude Code will now use environment variables[/yellow]"))
+    console.print("[yellow]💡 Claude Code will now use environment variables[/yellow]")
 
 
 def _write_settings(provider: str, region: str, user_level: bool = False) -> None:
@@ -290,7 +304,7 @@ def _write_settings(provider: str, region: str, user_level: bool = False) -> Non
 
 
     console.print(f"[green]✅ Wrote {provider} settings to {'user' if user_level else 'project'} settings[/green]")
-    console.print(f"   [blue]File:[/blue] {Config.get_user_settings_path() if user_level else Config.get_project_settings_path()")
+    console.print(f"   [blue]File:[/blue] {Config.get_user_settings_path() if user_level else Config.get_project_settings_path()}")
     console.print("[yellow]💡 This overrides environment variables[/yellow]")
     if user_level:
         console.print("[yellow]💡 Use 'ccm user reset' to restore env var control[/yellow]")
@@ -341,7 +355,7 @@ def account_list():
         console.print("[yellow]💡 Use 'ccm account save <name>' to save an account[/yellow]")
         return
     console.print("\n[blue]📋 Saved Accounts[/blue]")
-    for name, accounts:
+    for name in accounts:
         console.print(f"  - {name}")
     console.print()
 
@@ -373,41 +387,29 @@ def deepseek():
 
 
 @app.command()
-def kimi(region: str = "global"):
-    """Switch to Kimi (Moonshot AI).
-
-    Args:
-        region: china or global (default: global)
-    """
+def kimi(region: Annotated[str, typer.Argument(help="china or global (default: global)")] = "global"):
+    """Switch to Kimi (Moonshot AI)."""
     switch_provider(ProviderType.KIMI, region=region)
 
 
 @app.command()
-def glm(region: str = "global"):
-    """Switch to GLM (Zhipu AI).
-
-    Args:
-        region: china or global (default: global)
-    """
+def glm(region: Annotated[str, typer.Argument(help="china or global (default: global)")] = "global"):
+    """Switch to GLM (Zhipu AI)."""
     switch_provider(ProviderType.GLM, region=region)
 
 
 @app.command()
-def minimax(region: str = "global"):
-    """Switch to MiniMax.
-
-    Args:
-        region: china or global (default: global)
-    """
+def minimax(region: Annotated[str, typer.Argument(help="china or global (default: china)")] = "china"):
+    """Switch to MiniMax."""
     switch_provider(ProviderType.MINIMAX, region=region)
 
 
 @app.command()
-def ali(variant: str = "qwen", region: str = "china"):
+def ali(variant: Annotated[Optional[str], typer.Argument(help="qwen/kimi/glm/minimax")] = None, region: Annotated[str, typer.Argument(help="china or global (default: china)")] = "china"):
     """Switch to Alibaba Cloud Coding Plan.
 
     Args:
-        variant: qwen, kimi, glm, or minimax (default: qwen)
+        variant: qwen, kimi, glm, or minimax
         region: china or global (default: china)
     """
     switch_provider(ProviderType.ALI, variant=variant, region=region)
