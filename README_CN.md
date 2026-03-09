@@ -113,10 +113,24 @@ ccm glm china         # GLM 国内
 ccm deepseek          # DeepSeek
 ccm kimi global       # Kimi 海外
 ccm kimi china        # Kimi 国内
-ccm qwen global       # Qwen 海外
+ccm ali china         # 阿里云 Coding Plan
 ccm minimax           # MiniMax
 ccm seed              # 豆包/Seed
 ccm claude            # Claude 官方
+```
+
+### 阿里云 Coding Plan（2.4.0 新增）
+阿里云 Coding Plan 提供 4 个模型：
+```bash
+# 语法: ccm ali <variant> [region]
+ccm ali qwen china        # qwen3.5-plus（多模态）
+ccm ali kimi global       # kimi-k2.5（多模态）
+ccm ali glm china         # glm-5
+ccm ali minimax china     # MiniMax-M2.5
+
+# 冒号语法简写
+ccm ali:qwen              # qwen3.5-plus，国内
+ccm ali:kimi:global       # kimi-k2.5，海外
 ```
 
 ### 切换 + 启动 Claude Code
@@ -124,6 +138,11 @@ ccm claude            # Claude 官方
 ccc glm global        # 切换到 GLM 海外，然后启动
 ccc glm china         # 切换到 GLM 国内，然后启动
 ccc open glm          # 通过 OpenRouter
+
+# 阿里云 Coding Plan
+ccc ali               # 默认: qwen3.5-plus，国内
+ccc ali:qwen:global   # qwen3.5-plus，海外
+ccc ali:kimi          # kimi-k2.5，国内
 ```
 
 ### 查看状态
@@ -152,18 +171,20 @@ ccc                    # 显示 ccc 用法（无参数）
 
 | 提供商 | 命令 | 区域 | Base URL |
 |--------|------|------|----------|
+| 阿里云 | `ccm ali [variant] [global\|china]` | global | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
+| | | china（默认） | `coding.dashscope.aliyuncs.com/apps/anthropic` |
 | GLM | `ccm glm [global\|china]` | global（默认） | `api.z.ai/api/anthropic` |
 | | | china | `open.bigmodel.cn/api/anthropic` |
 | DeepSeek | `ccm deepseek` | - | `api.deepseek.com/anthropic` |
 | Kimi | `ccm kimi [global\|china]` | global（默认） | `api.moonshot.ai/anthropic` |
 | | | china | `api.moonshot.cn/anthropic` |
-| Qwen | `ccm qwen [global\|china]` | global（默认） | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
-| | | china | `coding.dashscope.aliyuncs.com/apps/anthropic` |
 | MiniMax | `ccm minimax [global\|china]` | global（默认） | `api.minimax.io/anthropic` |
 | | | china | `api.minimaxi.com/anthropic` |
 | 豆包/Seed | `ccm seed [variant]` | - | `ark.cn-beijing.volces.com/api/coding` |
 | Claude | `ccm claude` | - | `api.anthropic.com` |
 
+> **阿里云 Coding Plan**：[dashscope.console.aliyun.com](https://dashscope.console.aliyun.com/)
+>
 > **GLM Coding 套餐**：[bigmodel.cn/glm-coding](https://www.bigmodel.cn/glm-coding?ic=5XMIOZPPXB)
 >
 > **豆包 Coding Plan**：[volcengine.com](https://volcengine.com/L/rLv5d5OWXgg/)（邀请码：`ZP5PZMEY`）
@@ -176,6 +197,15 @@ ccm seed glm          # glm-5
 ccm seed deepseek     # deepseek-v3.2
 ccm seed kimi         # kimi-k2.5
 ```
+
+### 阿里云 Coding Plan 模型
+
+| 变体 | 模型 ID | 说明 |
+|------|---------|------|
+| `qwen` | qwen3.5-plus | 多模态（图片理解） |
+| `kimi` | kimi-k2.5 | 多模态（图片理解） |
+| `glm` | glm-5 | 通用 |
+| `minimax` | MiniMax-M2.5 | 通用 |
 
 ### OpenRouter
 ```bash

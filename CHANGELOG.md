@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.4.0] - 2026-03-09
+
+### Added - 阿里云 Coding Plan 模型切换 🎯
+- ✨ **新 Provider: `ali`**: 阿里云 Coding Plan 统一入口
+  - `ccc ali:qwen` - qwen3.5-plus（多模态，图片理解）
+  - `ccc ali:kimi` - kimi-k2.5（多模态，图片理解）
+  - `ccc ali:glm` - glm-5
+  - `ccc ali:minimax` - MiniMax-M2.5
+
+### Supported Models on Alibaba Cloud Coding Plan
+
+| Variant | Model ID | Features |
+|---------|----------|----------|
+| `qwen` | qwen3.5-plus | 多模态（图片理解） |
+| `kimi` | kimi-k2.5 | 多模态（图片理解） |
+| `glm` | glm-5 | 通用 |
+| `minimax` | MiniMax-M2.5 | 通用 |
+
+### Usage
+```bash
+# 阿里云 Coding Plan
+ccc ali                    # 默认: qwen3.5-plus, china
+ccc ali:qwen:global        # qwen3.5-plus, global
+ccc ali:kimi               # kimi-k2.5, china
+ccc ali:glm china          # glm-5, china
+ccc ali:minimax:global     # MiniMax-M2.5, global
+```
+
+### Changed
+- 📝 **Provider 重命名**: `qwen` → `ali`（阿里云 Coding Plan 统一入口）
+- 🔄 **参数解析增强**: `emit_env_exports()` 支持三参数签名
+- 📚 **帮助信息更新**: `ccc --help` 显示阿里云模型列表
+
+### Breaking Changes
+- ❌ **移除 `qwen` 命令**: 使用 `ali` 替代
+
 ## [2.3.0] - 2026-01-26
 
 ### Changed

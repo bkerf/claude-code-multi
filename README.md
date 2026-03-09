@@ -113,10 +113,24 @@ ccm glm china         # GLM China
 ccm deepseek          # DeepSeek
 ccm kimi global       # Kimi global
 ccm kimi china        # Kimi China
-ccm qwen global       # Qwen global
+ccm ali china         # Alibaba Cloud Coding Plan
 ccm minimax           # MiniMax
 ccm seed              # Doubao/Seed
 ccm claude            # Claude official
+```
+
+### Alibaba Cloud Coding Plan (2.4.0)
+Alibaba Cloud Coding Plan provides 4 models:
+```bash
+# Syntax: ccm ali <variant> [region]
+ccm ali qwen china        # qwen3.5-plus (multimodal)
+ccm ali kimi global       # kimi-k2.5 (multimodal)
+ccm ali glm china         # glm-5
+ccm ali minimax china     # MiniMax-M2.5
+
+# Short form with colon syntax
+ccm ali:qwen              # qwen3.5-plus, china
+ccm ali:kimi:global       # kimi-k2.5, global
 ```
 
 ### Switch + Launch Claude Code
@@ -124,6 +138,11 @@ ccm claude            # Claude official
 ccc glm global        # Switch to GLM global, then launch
 ccc glm china         # Switch to GLM China, then launch
 ccc open glm          # Via OpenRouter
+
+# Alibaba Cloud Coding Plan
+ccc ali               # Default: qwen3.5-plus, china
+ccc ali:qwen:global   # qwen3.5-plus, global region
+ccc ali:kimi          # kimi-k2.5, china region
 ```
 
 ### Check Status
@@ -152,18 +171,20 @@ ccc                    # Show ccc usage (no args)
 
 | Provider | Command | Region | Base URL |
 |----------|---------|--------|----------|
+| Alibaba | `ccm ali [variant] [global\|china]` | global | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
+| | | china (default) | `coding.dashscope.aliyuncs.com/apps/anthropic` |
 | GLM | `ccm glm [global\|china]` | global (default) | `api.z.ai/api/anthropic` |
 | | | china | `open.bigmodel.cn/api/anthropic` |
 | DeepSeek | `ccm deepseek` | - | `api.deepseek.com/anthropic` |
 | Kimi | `ccm kimi [global\|china]` | global (default) | `api.moonshot.ai/anthropic` |
 | | | china | `api.moonshot.cn/anthropic` |
-| Qwen | `ccm qwen [global\|china]` | global (default) | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
-| | | china | `coding.dashscope.aliyuncs.com/apps/anthropic` |
 | MiniMax | `ccm minimax [global\|china]` | global (default) | `api.minimax.io/anthropic` |
 | | | china | `api.minimaxi.com/anthropic` |
 | Seed/Doubao | `ccm seed [variant]` | - | `ark.cn-beijing.volces.com/api/coding` |
 | Claude | `ccm claude` | - | `api.anthropic.com` |
 
+> **Alibaba Coding Plan**: [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com/)
+>
 > **GLM Coding Plan**: [bigmodel.cn/glm-coding](https://www.bigmodel.cn/glm-coding?ic=5XMIOZPPXB)
 >
 > **Doubao Coding Plan**: [volcengine.com](https://volcengine.com/L/rLv5d5OWXgg/) (Invite code: `ZP5PZMEY`)
@@ -176,6 +197,15 @@ ccm seed glm          # glm-5
 ccm seed deepseek     # deepseek-v3.2
 ccm seed kimi         # kimi-k2.5
 ```
+
+### Alibaba Cloud Coding Plan Models
+
+| Variant | Model ID | Description |
+|---------|----------|-------------|
+| `qwen` | qwen3.5-plus | Multimodal (image understanding) |
+| `kimi` | kimi-k2.5 | Multimodal (image understanding) |
+| `glm` | glm-5 | General purpose |
+| `minimax` | MiniMax-M2.5 | General purpose |
 
 ### OpenRouter
 ```bash

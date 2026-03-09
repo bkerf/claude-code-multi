@@ -1,147 +1,85 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> Claude Code 模型切换 CLI。本文档只包含项目特有约束，通用规范见全局 `~/.claude/CLAUDE.md`。
 
-## Conversation Style
+## 项目定位
 
-**Roleplay Setting:**
-- **User (主公/Lord)**: The master who gives commands and makes decisions
-- **Claude (臣子/Subject)**: The loyal assistant who serves and advises
+Bash CLI 通过环境变量切换 Claude Code 的 AI 提供商。
 
-When interacting, maintain this relationship dynamics:
-- Be respectful and attentive
-- Provide clear, actionable advice
-- Wait for the lord's decisions
-- Use polite, formal tone when appropriate
-- Be ready to step back when dismissed
+## 命令
 
-## Project Overview
-
-**Claude Code Switch (CCM)** is a Bash-based CLI that switches Claude Code between providers/models by exporting Anthropic-compatible environment variables. There is no automatic fallback; OpenRouter is an explicit command.
-
-**Supported Providers (direct):** Claude (official), DeepSeek, Moonshot Kimi, Zhipu GLM, Alibaba Qwen (Coding Plan), MiniMax, Doubao/Seed (ARK)
-
-**OpenRouter:** Explicit command (`ccm open <provider>`)
-
-## Repository Structure
-
-```
-Claude-Code-Switch/
-├── ccm.sh              # Core script
-├── install.sh          # Installer (rc injection optional)
-├── uninstall.sh        # Uninstaller
-├── ccm                 # Wrapper script (delegates to ccm.sh)
-├── ccc                 # Launcher script (switch + exec claude)
-├── lang/               # i18n strings (en.json, zh.json)
-├── docs/               # Internal docs
-└── README.md / README_CN.md / TROUBLESHOOTING.md / CHANGELOG.md
-```
-
-## Key Architecture & Design Patterns
-
-### 1) Two usage modes
-- **Direct execution:** `./ccm ...` / `./ccc ...` (no install)
-- **Installed functions:** `ccm ...` / `ccc ...` (after `./install.sh`)
-  - Installer copies `ccm.sh` + `lang/` into `${XDG_DATA_HOME:-$HOME/.local/share}/ccm`
-  - Optional rc injection for `ccm()` / `ccc()` functions
-
-### 2) Configuration hierarchy
-Priority order:
-1. Environment variables
-2. `~/.ccm_config` (created on first run)
-3. Built-in defaults
-
-Key function: `is_effectively_set()` treats placeholder values as unset.
-
-### 3) Environment export pattern
-`emit_env_exports()` prints export statements which are `eval`'d by the caller:
 ```bash
-export ANTHROPIC_BASE_URL=...
-export ANTHROPIC_AUTH_TOKEN=...
-export ANTHROPIC_MODEL=...
-export ANTHROPIC_DEFAULT_SONNET_MODEL=...
-export ANTHROPIC_DEFAULT_OPUS_MODEL=...
-export ANTHROPIC_DEFAULT_HAIKU_MODEL=...
-export CLAUDE_CODE_SUBAGENT_MODEL=...
+ccm <provider> [region]    # 当前 shell 切换
+ccc <provider> [region]    # 切换 + 启动 Claude Code
 ```
 
-### 4) Region-aware providers
-Kimi / GLM / Qwen / MiniMax accept `global|china`:
-- `ccm kimi [global|china]`
-- `ccm glm [global|china]`
-- `ccm qwen [global|china]`
-- `ccm minimax [global|china]`
+## Provider
 
-Normalization handled by `normalize_region()`.
+| 命令 | 提供商 | 说明 |
+|------|--------|------|
+| `ali[:qwen\|kimi\|glm\|minimax]` | 阿里云 Coding Plan | 4 模型 |
+| `kimi [china\|global]` | Kimi (月之暗面) | 直连 |
+| `glm [china\|global]` | GLM (智谱) | 直连 |
+| `minimax [china\|global]` | MiniMax | 直连 |
+| `deepseek` | DeepSeek | - |
+| `seed [variant]` | 豆包/ARK | doubao/glm/kimi |
+| `claude` | Claude (官方) | - |
+| `open <provider>` | OpenRouter | - |
 
-### 5) OpenRouter (explicit)
-OpenRouter is not a fallback. Use:
-- `ccm open <provider>`
+## 核心文件
 
-`emit_openrouter_exports()` sets:
-- Base URL: `https://openrouter.ai/api`
-- `ANTHROPIC_AUTH_TOKEN=$OPENROUTER_API_KEY`
-- `ANTHROPIC_API_KEY=""` (avoid conflicts)
-
-### 6) Project-only override (Quotio-friendly)
-`ccm project glm [global|china]` writes `.claude/settings.local.json` so GLM applies only to the current project.
-
-## Common Commands & Workflows
-
-### Installation
-```bash
-./install.sh
-source ~/.zshrc
+```
+claude-code-switch/
+├── ccm.sh          # 核心: emit_env_exports(), resolve_model_variant()
+├── ccc             # 启动器: 解析参数, eval exports, exec claude
+├── install.sh      # 安装 + shell 函数
+├── lang/*.json     # 国际化
+└── docs/
+    └── ali/        # 阿里云 Coding Plan 功能文档
 ```
 
-### Switch in current shell
-```bash
-ccm deepseek
-ccm kimi china
+## 关键模式
+
+| 模式 | 说明 |
+|------|------|
+| 配置优先级 | `环境变量` > `~/.ccm_config` > `内置默认` |
+| 导出模式 | `emit_env_exports()` 输出 export 语句，调用方 eval 执行 |
+| 区域 | `china` (默认) \| `global` |
+
+## 开发约束
+
+### 禁止向后兼容
+
+- ❌ 删除的功能不再保留别名
+- ❌ 旧命令直接报错，不静默 fallback
+- ✅ 用户看到错误后更新使用方式
+
+### 新增 Provider
+
+1. 在 `emit_env_exports()` 添加 case
+2. 在 `resolve_model_variant()` 添加映射（如有变体）
+3. 更新 `ccc` 的 usage 和 `is_known_model()`
+4. 在配置模板添加默认值
+
+## 文档索引
+
+```
+docs/
+└── plans/                      # 3 Provider 并行开发
+    ├── ali/                    # 阿里云 Coding Plan
+    │   └── <feature>/         # 按功能分子目录
+    │       ├── PLAN.md
+    │       └── REQUIREMENTS.md
+    ├── glm/                    # GLM (智谱)
+    │   └── <feature>/
+    └── minimax/                # MiniMax
+        └── <feature>/
 ```
 
-### Launch Claude Code
-```bash
-ccc glm global
-ccc open kimi
-```
-
-### Seed (ARK)
-```bash
-ccm seed              # ark-code-latest
-ccm seed kimi         # kimi-k2.5
-ccm seed deepseek     # deepseek-v3.2
-```
-
-### Account management (Claude Pro)
-```bash
-ccm save-account work
-ccm switch-account work
-ccm list-accounts
-ccm delete-account work
-ccm current-account
-```
-
-## Code Organization in ccm.sh
-
-Key functions:
-- `load_translations()` / `load_config()` / `is_effectively_set()`
-- `emit_env_exports()` (provider switching)
-- `emit_openrouter_exports()` (OpenRouter)
-- `normalize_region()`
-- `project_write_glm_settings()` / `project_reset_settings()`
-- `show_status()` / `show_help()`
-- `main()` (command routing)
-
-## Adding a New Provider
-
-1. Add provider branch to `emit_env_exports()`
-2. Add to help text and README
-3. Add defaults to config template
-4. Add any region handling if required
-
-## Security Notes
-
-- Token masking in `ccm status`
-- Recommend `chmod 600 ~/.ccm_config`
-- Environment vars override config file (good for CI)
+| 路径 | 说明 |
+|------|------|
+| `docs/plans/ali/model-switch/` | 阿里云多模型切换 |
+| `docs/plans/glm/` | GLM 功能（待开发） |
+| `docs/plans/minimax/` | MiniMax 功能（待开发） |
+| `CHANGELOG.md` | 版本历史 |
+| `TROUBLESHOOTING.md` | 故障排查 |
