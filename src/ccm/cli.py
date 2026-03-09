@@ -89,7 +89,7 @@ def _is_placeholder(value: str) -> bool:
 def switch_provider(
     provider_type: ProviderType,
     variant: Annotated[Optional[str], typer.Argument(help="Model variant (e.g., qwen for ali)")] = None,
-    region: Annotated[str, typer.Argument(help="Region: china or global")] = "china",
+    region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china",
 ):
     """Switch to a provider and output export statements."""
     config = get_config()
@@ -263,7 +263,7 @@ app.add_typer(settings_app, name="user")
 @settings_app.command("set")
 def user_settings(
     provider: str,
-    region: Annotated[str, typer.Argument(help="Region (china/global)")] = "global",
+    region: Annotated[str, typer.Argument(help="Region: china or global (default: global)")] = "global",
 ):
     """Write provider settings to user-level (~/.claude/settings.json)."""
     _write_settings(provider, region, user=True)

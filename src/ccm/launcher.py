@@ -45,21 +45,32 @@ def launch_claude(env: dict) -> None:
         console.print("[red]error: 'claude' CLI not found. Install: npm install -g @anthropic-ai/claude-code[/red]")
         sys.exit(127)
 
-    # Windows: use start command to launch with proper focus
+    # Windows: use PowerShell to launch with focus
     if os.name == "nt":
-        import subprocess
+        cwd = os.getcwd().replace("\\", "\\\\")
 
-        # Build environment string for setx or direct env passing
-        env_parts = []
+        # Build environment variables as PowerShell script
+        env_ps = ""
         for key, val in env.items():
-            # Escape special characters for cmd
-            val_escaped = val.replace('^', '^^').replace('&', '^&').replace('|', '^|')
-            env_parts.append(f'set "{key}={val}"')
+            if val is not None:
+                val_escaped = val.replace("'", "''")
+                env_ps += f"$env:{key}='{val_escaped}'; "
 
-        # Use cmd /c start to launch claude in new window with focus
-        env_cmd = " && ".join(env_parts)
-        cmd = f'cmd /c "cd /d {os.getcwd()} && {env_cmd} && start "" claude"'
-        subprocess.run(cmd, shell=True)
+        # Use PowerShell Start-Process with proper environment and focus
+        # -WindowStyle Normal brings the window to front
+        ps_cmd = f'''
+$ErrorActionPreference = 'Stop'
+{env_ps}
+try {{
+    Start-Process 'claude' -WorkingDirectory '{cwd}' -WindowStyle Normal
+}} catch {{
+    Start-Process 'claude' -WorkingDirectory '{cwd}'
+}}
+'''
+        subprocess.run(
+            ["powershell", "-Command", ps_cmd],
+            shell=True,
+        )
         sys.exit(0)
     else:
         # Unix: set env vars and exec
@@ -131,7 +142,7 @@ def switch_and_launch(provider: str, region: str = "global", variant: Optional[s
 
 
 @app.command()
-def kimi(region: str = "china"):
+def kimi(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
     """Switch to Kimi and launch Claude Code."""
     switch_and_launch("kimi", region)
 
@@ -143,13 +154,13 @@ def deepseek():
 
 
 @app.command()
-def minimax(region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+def minimax(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
     """Switch to MiniMax and launch Claude Code."""
     switch_and_launch("minimax", region)
 
 
 @app.command()
-def ali(variant: Annotated[Optional[str], typer.Argument(help="qwen/kimi/glm/minimax")] = None, region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+def ali(variant: Annotated[Optional[str], typer.Argument(help="qwen/kimi/glm/minimax")] = None, region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
     """Switch to Alibaba and launch Claude Code."""
     switch_and_launch("ali", region, variant)
 
@@ -161,7 +172,7 @@ def seed(variant: Annotated[Optional[str], typer.Argument(help="Model variant")]
 
 
 @app.command()
-def glm(region: Annotated[str, typer.Argument(help="china or global")] = "china"):
+def glm(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
     """Switch to GLM and launch Claude Code."""
     switch_and_launch("glm", region)
 
