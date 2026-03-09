@@ -65,6 +65,6 @@ pids
 .obsolete_backup_*/
 
 # Internal documentation (not for end users)
-glm/
-qwen/
-minimax/
+# docs/plans/glm/
+# docs/plans/qwen/
+# docs/plans/minimax/
