@@ -15,13 +15,24 @@ git clone https://github.com/bkerf/claude-code-multi.git
 cd claude-code-multi
 ```
 
-### 2. 安装 Python 依赖
+### 2. 安装 Python 包
 
 ```powershell
-pip install -e .
+pip install claude-code-multi
 ```
 
-### 3. 配置 API Key
+这会创建全局命令 `ccm` 和 `ccc`。
+
+### 3. 配置 PowerShell 函数
+
+```powershell
+# 在 PowerShell 中运行安装脚本
+.\install-ps.ps1
+```
+
+这会将 `ccm` 和 `ccc` 函数添加到 PowerShell 配置文件中。
+
+### 4. 配置 API Key
 
 编辑 `~/.ccm_config` 文件，添加你的 API Key：
 

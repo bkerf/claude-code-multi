@@ -19,7 +19,13 @@ function ccm {
     ccm list         # List all providers
     ccm status       # Show current config
     #>
-    $output = python -m ccm.cli $args 2>&1
+    # Try installed command first, fallback to python -m
+    $cmd = Get-Command ccm -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.CommandType -eq "Application") {
+        $output = & ccm $args 2>&1
+    } else {
+        $output = python -m ccm.cli $args 2>&1
+    }
     $output | ForEach-Object {
         Write-Host $_
         if ($_ -match '^\$env:\w+\s*=\s*".*"') {
@@ -37,7 +43,13 @@ function ccc {
     ccc glm china    # Switch to GLM China and launch
     ccc kimi         # Switch to Kimi and launch
     #>
-    python -m ccm.launcher $args
+    # Try installed command first, fallback to python -m
+    $cmd = Get-Command ccc -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.CommandType -eq "Application") {
+        & ccc $args
+    } else {
+        python -m ccm.launcher $args
+    }
 }
 
 # ============================================================================
