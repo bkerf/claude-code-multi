@@ -11,7 +11,7 @@
 ### 1. 克隆项目
 
 ```powershell
-git clone https://github.com/your-repo/claude-code-switch.git
+git clone https://github.com/bkerf/claude-code-switch.git
 cd claude-code-switch
 ```
 
@@ -58,9 +58,6 @@ ccm ali qwen         # 阿里云 Qwen 模型
 # 查看状态
 ccm status
 ccm list
-
-# 设置 API Key
-ccm set minimax <your-api-key>
 ```
 
 执行后会输出环境变量设置命令，复制到当前终端执行：
@@ -93,7 +90,7 @@ ccc 会自动在新窗口启动 Claude Code。
 | `kimi` | 月之暗面 | china | - |
 | `deepseek` | DeepSeek | global | - |
 | `ali` | 阿里云 Coding Plan | china | qwen/glm/kimi/minimax |
-| `seed` | 豆包/ARK | global | doubao/glm/kimi |
+| `seed` | 豆包/ARK | global | doubao/glm/deepseek/kimi |
 | `stepfun` | 阶跃 | global | - |
 | `claude` | 官方 Claude | global | - |
 

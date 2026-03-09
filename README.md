@@ -1,22 +1,21 @@
-# Claude Code Switch (ccm)
+# Claude Code Multi (ccm)
+
+[English](README.md) | [中文](README_CN.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/issues)
+[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-switch.svg)](https://github.com/bkerf/claude-code-switch/issues)
 
-Switch Claude Code between AI providers with one command.
+Run different AI models in parallel across multiple terminal sessions for collaborative workflows.
 
-[中文文档](README_CN.md)
-
-## Windows 安装
-
-Windows 用户请参考：[Windows 安装与运行指南](docs/WINDOWS_INSTALL.md)
 
 ## Quick Start
 
 ```bash
 # 1. Install
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
+git clone https://github.com/bkerf/claude-code-switch.git
+cd claude-code-switch
+./install.sh
 
 # 2. Reload shell
 source ~/.zshrc  # or ~/.bashrc
@@ -36,28 +35,32 @@ ccm user reset           # Restore environment variable control
 ccm project glm china    # GLM for this project only
 
 # Advanced: Multiple Claude Pro accounts
-ccm save-account work    # save current account
-ccm switch-account work  # switch to saved account
+ccm account save work    # save current account
+ccm account switch work  # switch to saved account
 ```
 
 ---
 
 ## Installation
 
-> **Windows 用户**: 请参考 [Windows 安装指南](docs/WINDOWS_INSTALL.md)
+### Mac & Linux
 
-### Quick Install (Recommended)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
+git clone https://github.com/bkerf/claude-code-switch.git
+cd claude-code-switch
+./install.sh
 source ~/.zshrc  # or ~/.bashrc
 ```
 
-### Local Install
-```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+### Windows
+
+See [Windows Installation Guide](docs/WINDOWS_INSTALL.md)
+
+Quick start:
+```powershell
+git clone https://github.com/bkerf/claude-code-switch.git
 cd claude-code-switch
-./install.sh
-source ~/.zshrc
+pip install -e .
 ```
 
 ### Install Modes
@@ -83,6 +86,20 @@ source ~/.zshrc
 ---
 
 ## First-Time Setup
+
+> ⚠️ **Important: Remove the env field from settings.json**
+>
+> If your `~/.claude/settings.json` file contains an `env` field, **you must remove it**, otherwise the environment variables set by ccm will not take effect.
+>
+> **How to check:**
+> ```bash
+> cat ~/.claude/settings.json
+> ```
+>
+> If the output contains `"env": {...}` section, you need to remove it manually or run:
+> ```bash
+> ccm user reset
+> ```
 
 ### 1. Configure API Keys
 ```bash
@@ -162,6 +179,31 @@ ccm account current    # Show current Claude Pro account
 ccm help               # Show all commands
 ccc                    # Show ccc usage (no args)
 ```
+
+---
+
+## Multi-Model Collaboration
+
+The core purpose of ccm is to enable **different models in different terminals**, allowing specialized models to work together:
+
+```bash
+# Terminal 1: DeepSeek for coding
+ccm deepseek
+claude
+
+# Terminal 2: GLM for documentation
+ccm glm china
+claude
+
+# Terminal 3: MiniMax for analysis
+ccm minimax
+claude
+```
+
+Each terminal session maintains its own model selection. This enables:
+- **Parallel workflows** with specialized models
+- **Model comparison** on the same task
+- **Task delegation** to the most suitable model
 
 ---
 
@@ -388,7 +430,7 @@ eval "$(./ccm.sh glm china)"
 Contributions are welcome! Here's how you can help:
 
 ### Report Issues
-Found a bug or have a feature request? [Open an issue](https://github.com/foreveryh/claude-code-switch/issues).
+Found a bug or have a feature request? [Open an issue](https://github.com/bkerf/claude-code-switch/issues).
 
 ### Submit Code
 1. Fork the repository
@@ -399,7 +441,7 @@ Found a bug or have a feature request? [Open an issue](https://github.com/foreve
 
 ### Development
 ```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+git clone https://github.com/bkerf/claude-code-switch.git
 cd claude-code-switch
 ./ccm.sh help    # Test locally without installing
 ```
@@ -410,7 +452,6 @@ cd claude-code-switch
 
 ### v2.4.0 (2025-02)
 - **`ccm user` command** - Write settings directly to `~/.claude/settings.json` (highest priority)
-- **`ccm update-config` command** - Update outdated model IDs automatically
 - **Config file now always reloads** - Edit `~/.ccm_config` and changes apply immediately
 - **Enhanced `ccm status`** - Detects and warns about user-level settings overrides
 - Model updates: Kimi → `kimi-k2.5`, MiniMax → `MiniMax-M2.5`, GLM → `glm-5`
