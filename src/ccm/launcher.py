@@ -47,30 +47,52 @@ def launch_claude(env: dict) -> None:
 
     # Windows: use PowerShell to launch with focus
     if os.name == "nt":
-        cwd = os.getcwd().replace("\\", "\\\\")
+        import tempfile
 
-        # Build environment variables as PowerShell script
-        env_ps = ""
-        for key, val in env.items():
-            if val is not None:
-                val_escaped = val.replace("'", "''")
-                env_ps += f"$env:{key}='{val_escaped}'; "
+        cwd = os.getcwd()
 
-        # Use PowerShell Start-Process with proper environment and focus
-        # -WindowStyle Normal brings the window to front
-        ps_cmd = f'''
-$ErrorActionPreference = 'Stop'
-{env_ps}
-try {{
-    Start-Process 'claude' -ArgumentList '--dangerously-skip-permissions' -WorkingDirectory '{cwd}' -WindowStyle Normal
-}} catch {{
-    Start-Process 'claude' -ArgumentList '--dangerously-skip-permissions' -WorkingDirectory '{cwd}'
-}}
-'''
-        subprocess.run(
-            ["powershell", "-Command", ps_cmd],
-            shell=True,
-        )
+        # Create temporary script with environment variables
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.ps1', delete=False, encoding='utf-8') as f:
+            script_path = f.name
+            # Write environment variables
+            for key, val in env.items():
+                if val is not None:
+                    # Skip environment variables with special characters in names
+                    # PowerShell doesn't support parentheses in $env: syntax
+                    if '(' in key or ')' in key:
+                        continue
+                    val_escaped = val.replace("'", "''")
+                    f.write(f"$env:{key}='{val_escaped}'\n")
+            # Change to working directory and launch claude
+            f.write(f"Set-Location '{cwd}'\n")
+            f.write("claude --dangerously-skip-permissions\n")
+
+        # Try to launch with Windows Terminal, fallback to PowerShell
+        wt_path = shutil.which("wt.exe")
+        if wt_path:
+            # Use Windows Terminal (profile will be loaded)
+            try:
+                subprocess.Popen(
+                    [wt_path, "new-tab", "--title", "Claude Code", "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", script_path],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                )
+                console.print("[dim]Launched in Windows Terminal[/dim]")
+            except Exception as e:
+                console.print(f"[yellow]Warning: Failed to launch Windows Terminal: {e}[/yellow]")
+                # Fallback to regular PowerShell
+                subprocess.Popen(
+                    ["powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", script_path],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                )
+                console.print("[dim]Launched in PowerShell[/dim]")
+        else:
+            # No Windows Terminal, use regular PowerShell (profile will be loaded)
+            subprocess.Popen(
+                ["powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", script_path],
+                creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+            )
+            console.print("[dim]Launched in PowerShell[/dim]")
+
         sys.exit(0)
     else:
         # Unix: set env vars and exec
