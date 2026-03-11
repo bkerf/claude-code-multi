@@ -3,459 +3,312 @@
 [English](README.md) | [中文](README_CN.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/bkerf/claude-code-multi.svg)](https://github.com/bkerf/claude-code-multi/issues)
 
-Run different AI models in parallel across multiple terminal sessions for collaborative workflows.
+**统一动态配置系统 - 一个配置文件，管理所有 AI 提供商**
 
+## ⚠️ 重要变更 (v3.0.0)
+
+**新配置系统已启用，不向后兼容旧版本！**
+
+- ✅ 新配置文件：`~/.ccm_services.toml`
+- ✅ 统一认证变量：`ANTHROPIC_AUTH_TOKEN`
+- ✅ 动态服务命令：`ccm <service-name>`
+- ❌ 废弃：`~/.ccm_config`（旧配置文件）
+- ❌ 废弃：`ANTHROPIC_API_KEY`（错误的环境变量）
+- ❌ 废弃：`ccm kimi china`（旧命令格式）
+
+**迁移指南：**
+1. 复制 `ccm_services.template` 到 `~/.ccm_services.toml`
+2. 填写你的 API Key
+3. 使用新命令：`ccm kimi-cn` 而不是 `ccm kimi china`
+
+---
 
 ## Quick Start
 
 ```bash
-# 1. Install
+# 1. 安装
 git clone https://github.com/bkerf/claude-code-multi.git
 cd claude-code-multi
-./install.sh
+pip install -e .
 
-# 2. Reload shell
-source ~/.zshrc  # or ~/.bashrc
+# 2. 配置
+cp ccm_services.template ~/.ccm_services.toml
+# 编辑 ~/.ccm_services.toml 填写 API Key
 
-# 3. Configure your API keys
-ccm config
-
-# 4. Switch and use
-ccm glm              # switch to GLM
-ccc glm global       # switch + launch Claude Code
-
-# Advanced: User-level settings (highest priority, overrides everything)
-ccm user glm global      # Set GLM as default for all projects
-ccm user reset           # Restore environment variable control
-
-# Advanced: Project-only override
-ccm project glm china    # GLM for this project only
-
-# Advanced: Multiple Claude Pro accounts
-ccm account save work    # save current account
-ccm account switch work  # switch to saved account
+# 3. 使用
+ccm list              # 列出所有服务
+ccm kimi-cn           # 切换到 Kimi 中国
+ccc ali-qwen-cn       # 切换并启动 Claude Code
 ```
 
 ---
 
-## Installation
+## 安装
 
-### Mac & Linux
+### 所有平台（推荐）
 
 ```bash
-git clone https://github.com/bkerf/claude-code-multi.git
-cd claude-code-multi
-./install.sh
-source ~/.zshrc  # or ~/.bashrc
-```
-
-### Windows
-
-See [Windows Installation Guide](docs/WINDOWS_INSTALL.md)
-
-Quick start:
-```powershell
 git clone https://github.com/bkerf/claude-code-multi.git
 cd claude-code-multi
 pip install -e .
 ```
 
-### Install Modes
+### Windows
 
-| Mode               | Command                  | Use Case                           |
-| ------------------ | ------------------------ | ---------------------------------- |
-| **User** (default) | `./install.sh`           | Personal use, available everywhere |
-| **System**         | `./install.sh --system`  | Shared machine, all users          |
-| **Project**        | `./install.sh --project` | Project-specific, isolated setup   |
+详见 [Windows 安装指南](docs/WINDOWS_INSTALL.md)
 
-### Install Options
+---
+
+## 配置
+
+### 1. 创建配置文件
+
 ```bash
-./install.sh --no-rc           # Skip shell rc injection
-./install.sh --cleanup-legacy  # Remove old installation
-./install.sh --help            # Show all options
+cp ccm_services.template ~/.ccm_services.toml
 ```
 
-### Uninstall
+### 2. 编辑配置文件
+
 ```bash
-./uninstall.sh
+ccm config  # 自动打开编辑器
+```
+
+### 3. 填写 API Key
+
+```toml
+[service.kimi-cn]
+type = "kimi"
+base_url = "https://api.moonshot.cn/anthropic"
+api_key = "your-kimi-api-key"  # 填写你的 API Key
+model = "kimi-k2.5"
+default_sonnet = "kimi-k2.5"
+default_opus = "kimi-k2.5"
+default_haiku = "kimi-k2.5"
+subagent_model = "kimi-k2.5"
+```
+
+**所有字段必填，不可省略！**
+
+---
+
+## 基本使用
+
+### 列出所有服务
+
+```bash
+ccm list
+```
+
+输出示例：
+```
+┌────────────────┬──────────┬─────────────────────────────┬─────────┐
+│ Service        │ Type     │ Base URL                    │ API Key │
+├────────────────┼──────────┼─────────────────────────────┼─────────┤
+│ kimi-cn        │ kimi     │ api.moonshot.cn/anthropic   │ ✓       │
+│ glm-cn         │ glm      │ open.bigmodel.cn/anthropic  │ ✓       │
+│ minimax-cn     │ minimax  │ api.minimaxi.com/anthropic  │ ✓       │
+└────────────────┴──────────┴─────────────────────────────┴─────────┘
+```
+
+### 切换服务
+
+```bash
+ccm kimi-cn           # 切换到 Kimi 中国
+ccm glm-cn            # 切换到 GLM 中国
+ccm ali-qwen-cn       # 切换到阿里云 Qwen 中国
+ccm minimax-cn        # 切换到 MiniMax 中国
+ccm deepseek          # 切换到 DeepSeek
+```
+
+### 切换并启动 Claude Code
+
+```bash
+ccc kimi-cn           # 切换到 Kimi 并启动
+ccc ali-qwen-cn       # 切换到阿里云 Qwen 并启动
+```
+
+### 查看状态
+
+```bash
+ccm status            # 查看当前配置
 ```
 
 ---
 
-## First-Time Setup
+## 支持的服务
 
-> ⚠️ **Important: Remove the env field from settings.json**
->
-> If your `~/.claude/settings.json` file contains an `env` field, **you must remove it**, otherwise the environment variables set by ccm will not take effect.
->
-> **How to check:**
-> ```bash
-> cat ~/.claude/settings.json
-> ```
->
-> If the output contains `"env": {...}` section, you need to remove it manually or run:
-> ```bash
-> ccm user reset
-> ```
+配置文件包含 20 个预定义服务：
 
-### 1. Configure API Keys
-```bash
-ccm config
+| 服务名 | 提供商 | 区域 |
+|--------|--------|------|
+| `kimi` | Kimi (月之暗面) | Global |
+| `kimi-cn` | Kimi (月之暗面) | China |
+| `glm` | GLM (智谱) | Global |
+| `glm-cn` | GLM (智谱) | China |
+| `deepseek` | DeepSeek | - |
+| `minimax` | MiniMax | Global |
+| `minimax-cn` | MiniMax | China |
+| `ali-qwen` | 阿里云 Qwen | Global |
+| `ali-qwen-cn` | 阿里云 Qwen | China |
+| `ali-kimi` | 阿里云 Kimi | Global |
+| `ali-kimi-cn` | 阿里云 Kimi | China |
+| `ali-glm` | 阿里云 GLM | Global |
+| `ali-glm-cn` | 阿里云 GLM | China |
+| `ali-minimax` | 阿里云 MiniMax | Global |
+| `ali-minimax-cn` | 阿里云 MiniMax | China |
+| `seed` | Seed/Doubao (字节) | - |
+| `stepfun` | StepFun (阶跃) | - |
+| `claude` | Claude (官方) | - |
+| `openrouter` | OpenRouter | - |
+
+### 自定义服务
+
+你可以在配置文件中添加自己的中转服务：
+
+```toml
+[service.my-service]
+type = "claude"
+base_url = "https://your-proxy.com"
+api_key = "your-api-key"
+model = "claude-sonnet-4-6"
+default_sonnet = "claude-sonnet-4-6"
+default_opus = "claude-opus-4-6"
+default_haiku = "claude-haiku-4-5-20251001"
+subagent_model = "claude-sonnet-4-6"
 ```
 
-This opens `~/.ccm_config` in your editor. Add your API keys:
-
+然后使用：
 ```bash
-# Required for each provider you want to use
-DEEPSEEK_API_KEY=sk-...
-KIMI_API_KEY=...
-GLM_API_KEY=...
-QWEN_API_KEY=...
-MINIMAX_API_KEY=...
-ARK_API_KEY=...           # For Doubao/Seed
-OPENROUTER_API_KEY=...    # For OpenRouter
-CLAUDE_API_KEY=...        # Optional, for Claude API (vs subscription)
-```
-
-### 2. Verify Setup
-```bash
-ccm status    # Check current configuration
+ccm my-service
 ```
 
 ---
 
-## Basic Usage
+## 环境变量
 
-### Switch Provider (in current shell)
+所有服务统一使用以下环境变量：
+
 ```bash
-ccm glm global        # GLM global (default)
-ccm glm china         # GLM China
-ccm deepseek          # DeepSeek
-ccm kimi global       # Kimi global
-ccm kimi china        # Kimi China
-ccm ali china         # Alibaba Cloud Coding Plan
-ccm minimax           # MiniMax
-ccm seed              # Doubao/Seed
-ccm claude            # Claude official
+ANTHROPIC_BASE_URL                    # API 端点
+ANTHROPIC_AUTH_TOKEN                  # API 密钥（唯一认证变量）
+ANTHROPIC_MODEL                       # 主模型
+ANTHROPIC_DEFAULT_SONNET_MODEL        # Sonnet 模型
+ANTHROPIC_DEFAULT_OPUS_MODEL          # Opus 模型
+ANTHROPIC_DEFAULT_HAIKU_MODEL         # Haiku 模型
+CLAUDE_CODE_SUBAGENT_MODEL            # 子代理模型
+CLAUDE_CODE_EFFORT_LEVEL              # 努力级别
+CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC  # 禁用非必要流量
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS  # 实验性代理团队
 ```
 
-### Alibaba Cloud Coding Plan (2.4.0)
-Alibaba Cloud Coding Plan provides 4 models:
-```bash
-# Syntax: ccm ali <variant> [region]
-ccm ali qwen china        # qwen3.5-plus (multimodal)
-ccm ali kimi global       # kimi-k2.5 (multimodal)
-ccm ali glm china         # glm-5
-ccm ali minimax china     # MiniMax-M2.5
+**⚠️ 重要：**
+- ✅ 使用 `ANTHROPIC_AUTH_TOKEN`
+- ❌ 不要使用 `ANTHROPIC_API_KEY`（已废弃）
 
-# Short form with colon syntax
-ccm ali:qwen              # qwen3.5-plus, china
-ccm ali:kimi:global       # kimi-k2.5, global
+---
+
+## 核心规范
+
+详见 [docs/CORE_RULES.md](docs/CORE_RULES.md)
+
+**最核心约束：永远禁止向后兼容！**
+
+1. ❌ 不保留废弃代码
+2. ❌ 不兼容旧配置
+3. ❌ 不兼容旧命令
+4. ✅ 直接删除旧代码
+5. ✅ 明确错误提示
+6. ✅ 用户负责更新
+
+---
+
+## 故障排查
+
+### Auth conflict 告警
+
+如果看到以下告警：
+```
+⚠️ Auth conflict: Both a token (ANTHROPIC_AUTH_TOKEN) and an API key (ANTHROPIC_API_KEY) are set.
 ```
 
-### Switch + Launch Claude Code
+**解决方法：**
 ```bash
-ccc glm global        # Switch to GLM global, then launch
-ccc glm china         # Switch to GLM China, then launch
-ccc open glm          # Via OpenRouter
+# PowerShell
+$env:ANTHROPIC_API_KEY = $null
 
-# Alibaba Cloud Coding Plan
-ccc ali               # Default: qwen3.5-plus, china
-ccc ali:qwen:global   # qwen3.5-plus, global region
-ccc ali:kimi          # kimi-k2.5, china region
+# Bash/Zsh
+unset ANTHROPIC_API_KEY
 ```
 
-### Check Status
+### 配置文件不存在
+
 ```bash
-ccm status             # Show current model and API key status
-ccm account current    # Show current Claude Pro account
+❌ 配置文件不存在: ~/.ccm_services.toml
+💡 复制 ccm_services.template 到 ~/.ccm_services.toml 并填写 API Key
 ```
 
-### Get Help
+**解决方法：**
 ```bash
-ccm help               # Show all commands
-ccc                    # Show ccc usage (no args)
+cp ccm_services.template ~/.ccm_services.toml
+ccm config  # 编辑配置
+```
+
+### 服务未配置 API Key
+
+```bash
+❌ Service 'kimi' 未配置 api_key
+💡 编辑 ~/.ccm_services.toml 并设置 api_key
+```
+
+**解决方法：**
+打开 `~/.ccm_services.toml`，找到对应服务，填写 `api_key` 字段。
+
+---
+
+## 开发
+
+### 项目结构
+
+```
+claude-code-multi/
+├── src/ccm/
+│   ├── cli.py              # CLI 入口（动态命令注册）
+│   ├── launcher.py         # ccc 启动器
+│   ├── config/
+│   │   ├── services.py     # 服务配置管理
+│   │   └── __init__.py
+│   └── providers/          # Provider 实现（已废弃，仅保留 base.py）
+├── ccm_services.template   # 配置模板
+├── docs/
+│   ├── CORE_RULES.md       # 核心规范
+│   └── WINDOWS_INSTALL.md  # Windows 安装指南
+└── README.md
+```
+
+### 运行测试
+
+```bash
+pip install -e .
+ccm list
+ccm status
 ```
 
 ---
 
-## Multi-Model Collaboration
+## 版本历史
 
-The core purpose of ccm is to enable **different models in different terminals**, allowing specialized models to work together:
-
-```bash
-# Terminal 1: DeepSeek for coding
-ccm deepseek
-claude
-
-# Terminal 2: GLM for documentation
-ccm glm china
-claude
-
-# Terminal 3: MiniMax for analysis
-ccm minimax
-claude
-```
-
-Each terminal session maintains its own model selection. This enables:
-- **Parallel workflows** with specialized models
-- **Model comparison** on the same task
-- **Task delegation** to the most suitable model
-
----
-
-## Providers Reference
-
-### Direct Providers (API Key Required)
-
-| Provider    | Command                             | Region           | Base URL                                            |
-| ----------- | ----------------------------------- | ---------------- | --------------------------------------------------- |
-| Alibaba     | `ccm ali [variant] [global\|china]` | global           | `coding-intl.dashscope.aliyuncs.com/apps/anthropic` |
-|             |                                     | china (default)  | `coding.dashscope.aliyuncs.com/apps/anthropic`      |
-| GLM         | `ccm glm [global\|china]`           | global (default) | `api.z.ai/api/anthropic`                            |
-|             |                                     | china            | `open.bigmodel.cn/api/anthropic`                    |
-| DeepSeek    | `ccm deepseek`                      | -                | `api.deepseek.com/anthropic`                        |
-| Kimi        | `ccm kimi [global\|china]`          | global (default) | `api.moonshot.ai/anthropic`                         |
-|             |                                     | china            | `api.moonshot.cn/anthropic`                         |
-| MiniMax     | `ccm minimax [global\|china]`       | global (default) | `api.minimax.io/anthropic`                          |
-|             |                                     | china            | `api.minimaxi.com/anthropic`                        |
-| Seed/Doubao | `ccm seed [variant]`                | -                | `ark.cn-beijing.volces.com/api/coding`              |
-| Claude      | `ccm claude`                        | -                | `api.anthropic.com`                                 |
-
-> **Alibaba Coding Plan**: [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com/)
->
-> **GLM Coding Plan**: [bigmodel.cn/glm-coding](https://www.bigmodel.cn/glm-coding?ic=5XMIOZPPXB)
->
-> **Doubao Coding Plan**: [volcengine.com](https://volcengine.com/L/rLv5d5OWXgg/) (Invite code: `ZP5PZMEY`)
-
-### Seed Variants
-```bash
-ccm seed              # ark-code-latest (default)
-ccm seed doubao       # doubao-seed-code
-ccm seed glm          # glm-5
-ccm seed deepseek     # deepseek-v3.2
-ccm seed kimi         # kimi-k2.5
-```
-
-### Alibaba Cloud Coding Plan Models
-
-| Variant   | Model ID     | Description                      |
-| --------- | ------------ | -------------------------------- |
-| `qwen`    | qwen3.5-plus | Multimodal (image understanding) |
-| `kimi`    | kimi-k2.5    | Multimodal (image understanding) |
-| `glm`     | glm-5        | General purpose                  |
-| `minimax` | MiniMax-M2.5 | General purpose                  |
-
-### OpenRouter
-```bash
-ccm open              # Show help
-ccm open claude       # Claude via OpenRouter
-ccm open glm          # GLM via OpenRouter
-ccm open kimi         # Kimi via OpenRouter
-ccm open deepseek     # DeepSeek via OpenRouter
-ccm open qwen         # Qwen via OpenRouter
-ccm open minimax      # MiniMax via OpenRouter
-ccm open stepfun      # StepFun via OpenRouter
-ccm open sf-free      # StepFun free tier
-```
-
-**Available providers:** `claude`, `glm`, `kimi`, `deepseek`, `qwen`, `minimax`, `stepfun`
-
-**Free tier:** `stepfun-free` or `sf-free` for StepFun's free model
-
----
-
-## Advanced Features
-
-### Claude Pro Account Management
-Switch between multiple Claude Pro subscriptions:
-
-```bash
-# Save current logged-in account
-ccm account save work
-
-# Switch to saved account
-ccm account switch work
-
-# List all saved accounts
-ccm account list
-
-# Show current account
-ccm account current
-
-# Delete saved account
-ccm account delete work
-```
-
-### User-Level Settings (Highest Priority)
-Write settings directly to `~/.claude/settings.json`. This overrides everything including environment variables and is useful when you have other tools (like Quotio) that also modify this file.
-
-```bash
-# Set provider at user level
-ccm user glm global      # GLM global for all projects
-ccm user glm china       # GLM China for all projects
-ccm user deepseek        # DeepSeek for all projects
-ccm user claude          # Claude official for all projects
-
-# Reset to environment variable control
-ccm user reset           # Remove ccm settings, use env vars instead
-```
-
-**When to use:**
-- You have Quotio or another proxy that sets `~/.claude/settings.json`
-- You want a persistent default that survives shell restarts
-- Environment variables are being overridden by something else
-
-### Project-Only Override
-Override settings for a specific project (keeps global settings intact):
-
-```bash
-# In your project directory
-ccm project glm global    # Use GLM for this project only
-ccm project glm china     # Use GLM China for this project
-ccm project reset         # Remove project override
-```
-
-This creates/removes `.claude/settings.local.json` in the current project.
-
-### Launch with Account
-```bash
-ccc work                  # Switch to 'work' account, then launch
-ccc claude:personal       # Switch to 'personal' account + use Claude
-```
-
----
-
-## Configuration
-
-### Priority Order (highest to lowest)
-1. `~/.claude/settings.json` (env section) - User-level settings
-2. `.claude/settings.local.json` - Project-level settings
-3. `~/.ccm_config` file - **Always reloads on each ccm command**
-4. Environment variables (only used if config value is a placeholder)
-
-### Config File Location
-```
-~/.ccm_config
-```
-
-### Quick Setup
-```bash
-# Copy sample config and edit
-cp ccm_config.example ~/.ccm_config
-ccm config  # Open in editor
-```
-
-### Multi-Variant Providers
-
-Some providers support multiple models with a **unified API key**:
-
-| Provider        | API Key              | Variants (CLI)                           | Example              |
-| --------------- | -------------------- | ---------------------------------------- | -------------------- |
-| **Alibaba**     | `QWEN_API_KEY`       | `qwen`, `kimi`, `glm`, `minimax`         | `ccm ali kimi china` |
-| **Seed/Doubao** | `ARK_API_KEY`        | `doubao`, `glm`, `deepseek`, `kimi`      | `ccm seed glm`       |
-| **OpenRouter**  | `OPENROUTER_API_KEY` | `claude`, `kimi`, `glm`, `deepseek`, ... | `ccm open claude`    |
-
-**Key insight:** Variants are specified via CLI, not in config file. One API key covers all variants.
-
-```bash
-# Alibaba: One key, 4 models
-QWEN_API_KEY=sk-xxx     # Works for qwen, kimi, glm, minimax
-
-# Then switch models via CLI:
-ccm ali qwen            # → qwen3.5-plus
-ccm ali kimi global     # → kimi-k2.5 (global region)
-ccm ali glm china       # → glm-5 (china region)
-```
-
-### Full Config Example
-
-See [ccm_config.example](ccm_config.example) for a complete annotated sample.
-
-```bash
-# ~/.ccm_config - API Keys
-DEEPSEEK_API_KEY=sk-xxx
-KIMI_API_KEY=sk-xxx
-GLM_API_KEY=sk-xxx
-QWEN_API_KEY=sk-xxx     # Unified key for ali variants
-MINIMAX_API_KEY=sk-xxx
-ARK_API_KEY=sk-xxx      # Unified key for seed variants
-OPENROUTER_API_KEY=sk-or-xxx
-
-# Model ID Overrides (optional)
-DEEPSEEK_MODEL=deepseek-chat
-KIMI_MODEL=kimi-k2.5
-KIMI_CN_MODEL=kimi-k2.5
-QWEN_MODEL=qwen3-max-2026-01-23
-GLM_MODEL=glm-5
-MINIMAX_MODEL=MiniMax-M2.5
-SEED_MODEL=ark-code-latest
-CLAUDE_MODEL=claude-sonnet-4-5-20250929
-OPUS_MODEL=claude-opus-4-6
-HAIKU_MODEL=claude-haiku-4-5-20251001
-```
-
----
-
-## Without RC Injection
-
-If you installed with `--no-rc` or want to use from cloned repo:
-
-```bash
-# Switch model (apply env vars to current shell)
-eval "$(ccm glm global)"
-eval "$(./ccm.sh glm china)"
-
-# Or use the wrapper scripts directly
-./ccm glm global         # Just prints exports
-./ccc glm china          # Switch + launch
-```
-
----
-
-## Notes
-
-- **7 env vars exported per provider**: `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`
-- **Claude official**: Uses your Claude Code subscription by default, or `CLAUDE_API_KEY` if set
-- **OpenRouter**: Requires explicit `ccm open <provider>` command
-- **Project override**: Only affects the current project via `.claude/settings.local.json`
-
----
-
-## Contributing
-
-Contributions are welcome! Here's how you can help:
-
-### Report Issues
-Found a bug or have a feature request? [Open an issue](https://github.com/bkerf/claude-code-multi/issues).
-
-### Submit Code
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-### Development
-```bash
-git clone https://github.com/bkerf/claude-code-multi.git
-cd claude-code-multi
-./ccm.sh help    # Test locally without installing
-```
-
----
-
-## What's New
+### v3.0.0 (2025-03)
+- ✅ **统一动态配置系统** - 一个 TOML 文件管理所有服务
+- ✅ **动态命令注册** - 自动为每个服务创建命令
+- ✅ **统一认证变量** - 所有服务使用 `ANTHROPIC_AUTH_TOKEN`
+- ❌ **移除向后兼容** - 不支持旧配置文件和旧命令
+- 📝 **核心规范文档** - `docs/CORE_RULES.md`
 
 ### v2.4.0 (2025-02)
-- **`ccm user` command** - Write settings directly to `~/.claude/settings.json` (highest priority)
-- **Config file now always reloads** - Edit `~/.ccm_config` and changes apply immediately
-- **Enhanced `ccm status`** - Detects and warns about user-level settings overrides
-- Model updates: Kimi → `kimi-k2.5`, MiniMax → `MiniMax-M2.5`, GLM → `glm-5`
-- Added Coding Plan links: GLM, Doubao
+- User-level settings
+- Config file auto-reload
+- Model updates
 
 ---
 
@@ -465,6 +318,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Acknowledgments
+## Contributing
 
-This tool is inspired by the need to easily switch between AI providers while using Claude Code. Thanks to all contributors and the open-source community.
+欢迎贡献！请遵循以下规范：
+
+1. **禁止向后兼容** - 不保留废弃代码
+2. **明确错误提示** - 告诉用户如何更新
+3. **简洁代码** - 不添加不必要的抽象
+
+详见 [docs/CORE_RULES.md](docs/CORE_RULES.md)

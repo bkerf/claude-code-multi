@@ -1,6 +1,9 @@
 # CLAUDE.md
 
 > Claude Code 模型切换 CLI (Python 版)。本文档只包含项目特有约束，通用规范见全局 `~/.claude/CLAUDE.md`。
+
+**⚠️ 最核心约束：永远禁止向后兼容！** 详见 `docs/CORE_RULES.md` 和全局 CLAUDE.md。
+
 # 禁止在项目库代码中出现任何api key
 ## 项目定位
 
