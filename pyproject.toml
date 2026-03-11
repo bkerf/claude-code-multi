@@ -44,7 +44,7 @@ dev = [
 
 [project.scripts]
 ccm = "ccm.cli:run"
-ccc = "ccm.launcher:main"
+ccc = "ccm.launcher:run"
 
 [project.urls]
 Homepage = "https://github.com/peng/claude-code-multi"

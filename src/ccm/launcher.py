@@ -92,11 +92,21 @@ def launch_claude(env: dict) -> None:
 
         sys.exit(0)
     else:
-        # Unix: set env vars and exec
-        for key, val in env.items():
-            os.environ[key] = val
+        # Unix/macOS: launch in current terminal with env vars
         try:
-            os.execvp(claude_cmd, [claude_cmd, "--dangerously-skip-permissions"])
+            # Set environment variables and launch
+            env_copy = os.environ.copy()
+            env_copy.update(env)
+
+            # Use subprocess to launch claude in the same terminal
+            result = subprocess.run(
+                [claude_cmd, "--dangerously-skip-permissions"],
+                env=env_copy
+            )
+            sys.exit(result.returncode)
+        except FileNotFoundError:
+            console.print(f"[red]error: 'claude' command not found at {claude_cmd}[/red]")
+            sys.exit(127)
         except Exception as e:
             console.print(f"[red]error: Failed to launch Claude Code: {e}[/red]")
             sys.exit(1)
@@ -178,10 +188,6 @@ def register_dynamic_commands():
         pass
 
 
-# Register commands at module load time
-register_dynamic_commands()
-
-
 @app.callback(invoke_without_command=True)
 def main(
     version: Annotated[bool, typer.Option("--version", "-v", help="Show version")] = False,
@@ -189,7 +195,10 @@ def main(
     """Claude Code launcher - switch provider and exec claude."""
     if version:
         console.print(f"ccc version {__version__}")
-        raise typer.Exit(0)
+        sys.exit(0)
+
+    # Register dynamic commands on first run
+    register_dynamic_commands()
 
     # If no subcommand provided, show help
     if len(sys.argv) == 1:
@@ -215,11 +224,12 @@ def main(
         console.print("\n[bold]Examples:[/bold]")
         console.print("  ccc kimi          # Switch to Kimi and launch")
         console.print("  ccc ali-qwen-cn   # Switch to Alibaba Qwen China and launch")
-        raise typer.Exit(0)
+        sys.exit(0)
 
 
 def run():
     """Entry point for ccc command."""
+    register_dynamic_commands()
     app()
 
 
