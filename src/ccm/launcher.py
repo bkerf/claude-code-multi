@@ -92,11 +92,21 @@ def launch_claude(env: dict) -> None:
 
         sys.exit(0)
     else:
-        # Unix: set env vars and exec
-        for key, val in env.items():
-            os.environ[key] = val
+        # Unix/macOS: launch in current terminal with env vars
         try:
-            os.execvp(claude_cmd, [claude_cmd, "--dangerously-skip-permissions"])
+            # Set environment variables and launch
+            env_copy = os.environ.copy()
+            env_copy.update(env)
+
+            # Use subprocess to launch claude in the same terminal
+            result = subprocess.run(
+                [claude_cmd, "--dangerously-skip-permissions"],
+                env=env_copy
+            )
+            sys.exit(result.returncode)
+        except FileNotFoundError:
+            console.print(f"[red]error: 'claude' command not found at {claude_cmd}[/red]")
+            sys.exit(127)
         except Exception as e:
             console.print(f"[red]error: Failed to launch Claude Code: {e}[/red]")
             sys.exit(1)
