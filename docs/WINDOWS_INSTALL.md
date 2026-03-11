@@ -1,10 +1,12 @@
-# Windows 安装与运行指南
+# Windows 安装指南
 
 ## 环境要求
 
 - Python 3.10+
 - Node.js 18+ (用于 Claude Code)
 - Windows 10/11
+
+---
 
 ## 安装步骤
 
@@ -18,178 +20,207 @@ cd claude-code-multi
 ### 2. 安装 Python 包
 
 ```powershell
-pip install claude-code-multi
+pip install -e .
 ```
 
 这会创建全局命令 `ccm` 和 `ccc`。
 
-### 3. 配置 PowerShell 函数
+### 3. 创建配置文件
 
 ```powershell
-# 在 PowerShell 中运行安装脚本
-.\install-ps.ps1
+# 复制配置模板
+cp ccm_services.template ~/.ccm_services.toml
+
+# 编辑配置文件
+ccm config
 ```
 
-这会将 `ccm` 和 `ccc` 函数添加到 PowerShell 配置文件中。
+### 4. 填写 API Key
 
-### 4. 配置 API Key
+在打开的编辑器中，找到你要使用的服务，填写 `api_key` 字段：
 
-编辑 `~/.ccm_config` 文件，添加你的 API Key：
-
-```ini
-# API Keys
-GLM_API_KEY=your-glm-api-key
-KIMI_API_KEY=your-kimi-api-key
-MINIMAX_API_KEY=your-minimax-api-key
-QWEN_API_KEY=your-qwen-api-key
-
-# 可选：设置默认模型
-MINIMAX_MODEL=MiniMax-M2.5-highspeed
-GLM_MODEL=glm-5
+```toml
+[service.minimax-cn]
+type = "minimax"
+base_url = "https://api.minimaxi.com/anthropic"
+api_key = "your-minimax-api-key"  # 填写你的 API Key
+model = "MiniMax-M2.5-highspeed"
+default_sonnet = "MiniMax-M2.5-highspeed"
+default_opus = "MiniMax-M2.5-highspeed"
+default_haiku = "MiniMax-M2.5-highspeed"
+subagent_model = "MiniMax-M2.5-highspeed"
 ```
+
+**所有字段必填，不可省略！**
+
+---
 
 ## 使用方法
 
-### ccm 命令（仅切换环境变量）
+### 列出所有服务
 
 ```powershell
-# 切换到指定 provider
-ccm minimax           # MiniMax (默认 china)
-ccm minimax global    # MiniMax (global)
-ccm glm              # GLM (默认 china)
-ccm glm china        # GLM (china)
-ccm kimi             # Kimi (默认 china)
-ccm deepseek         # DeepSeek (默认 global)
-ccm ali              # 阿里云 (默认 qwen)
-ccm ali glm          # 阿里云 GLM 模型
-ccm ali minimax       # 阿里云 MiniMax 模型
-ccm ali kimi         # 阿里云 Kimi 模型
-ccm ali qwen         # 阿里云 Qwen 模型
-
-# 查看状态
-ccm status
 ccm list
 ```
 
-执行后会输出环境变量设置命令，复制到当前终端执行：
+### 查看当前配置
+
+```powershell
+ccm status
+```
+
+### 切换服务（当前 shell）
+
+```powershell
+ccm minimax-cn        # MiniMax 中国
+ccm glm-cn            # GLM 中国
+ccm kimi-cn           # Kimi 中国
+ccm ali-qwen-cn       # 阿里云 Qwen 中国
+ccm deepseek          # DeepSeek
+```
+
+执行后会输出 PowerShell 环境变量设置命令：
 
 ```powershell
 $env:ANTHROPIC_BASE_URL = "https://api.minimaxi.com/anthropic"
 $env:ANTHROPIC_AUTH_TOKEN = "your-key"
+$env:ANTHROPIC_MODEL = "MiniMax-M2.5-highspeed"
 # ...
 ```
 
-### ccc 命令（切换 + 启动 Claude Code）
+### 切换并启动 Claude Code
 
 ```powershell
-# 切换并启动
-ccc minimax           # MiniMax (默认 china)
-ccc glm              # GLM (默认 china)
-ccc ali glm          # 阿里云 GLM 模型
-ccc ali minimax      # 阿里云 MiniMax 模型
-ccc ali kimi         # 阿里云 Kimi 模型
+ccc minimax-cn        # 切换到 MiniMax 并启动
+ccc glm-cn            # 切换到 GLM 并启动
+ccc ali-qwen-cn       # 切换到阿里云 Qwen 并启动
 ```
 
 **工作原理：**
-- `ccc` 会自动在新的 Windows Terminal 窗口（或 PowerShell 窗口）中启动 Claude Code
-- 正常加载 PowerShell profile，保留你的自定义配置
-- 自动设置所有必需的环境变量（API Key、Base URL、模型配置等）
+- `ccc` 会在新的 Windows Terminal 窗口（或 PowerShell 窗口）中启动 Claude Code
+- 自动设置所有必需的环境变量
 - 自动过滤包含特殊字符的环境变量名，避免 PowerShell 语法错误
-- 窗口标题显示 "Claude Code" 便于识别
+- 窗口标题显示 "Claude Code"
 
-**优势：**
-- ✅ 保留 profile 配置（别名、函数、环境变量等）
-- ✅ 环境变量自动配置，无需手动设置
-- ✅ 独立窗口，不影响当前终端
-- ✅ 支持 Windows Terminal 和传统 PowerShell
+---
 
-## Provider 列表
+## 支持的服务
 
-| 命令 | 提供商 | 默认 Region | 支持变体 |
-|------|--------|-------------|----------|
-| `minimax` | MiniMax | china | - |
-| `glm` | 智谱 GLM | china | - |
-| `kimi` | 月之暗面 | china | - |
-| `deepseek` | DeepSeek | global | - |
-| `ali` | 阿里云 Coding Plan | china | qwen/glm/kimi/minimax |
-| `seed` | 豆包/ARK | global | doubao/glm/deepseek/kimi |
-| `stepfun` | 阶跃 | global | - |
-| `claude` | 官方 Claude | global | - |
+配置文件包含 20 个预定义服务：
+
+| 服务名 | 提供商 | 区域 |
+|--------|--------|------|
+| `kimi-cn` | Kimi (月之暗面) | China |
+| `glm-cn` | GLM (智谱) | China |
+| `minimax-cn` | MiniMax | China |
+| `ali-qwen-cn` | 阿里云 Qwen | China |
+| `ali-kimi-cn` | 阿里云 Kimi | China |
+| `ali-glm-cn` | 阿里云 GLM | China |
+| `ali-minimax-cn` | 阿里云 MiniMax | China |
+| `deepseek` | DeepSeek | Global |
+| `seed` | Seed/Doubao (字节) | - |
+| `stepfun` | StepFun (阶跃) | - |
+| `claude` | Claude (官方) | - |
+
+完整列表见 [docs/README_INDEX.md](README_INDEX.md)
+
+---
 
 ## 常见问题
 
-### Q: ccc 启动后看不到窗口或有语法错误
+### Q: 配置文件不存在
 
-A: 已修复！当前版本自动过滤了包含特殊字符的环境变量名（如 `COMMONPROGRAMFILES(X86)`），避免 PowerShell 语法错误。
+```
+❌ 配置文件不存在: ~/.ccm_services.toml
+💡 复制 ccm_services.template 到 ~/.ccm_services.toml 并填写 API Key
+```
 
-**修复内容：**
-- ✅ 过滤环境变量名中的括号，避免 `Unexpected token '('` 错误
-- ✅ 使用 Python subprocess 直接启动，避免 PowerShell 字符串转义问题
-- ✅ 保留 profile 加载，不影响你的自定义配置
+**解决方法：**
+```powershell
+cp ccm_services.template ~/.ccm_services.toml
+ccm config
+```
 
-如果仍有问题，请检查：
-1. 是否已重新安装：`pip install -e .`
-2. Python 版本是否 >= 3.10
-3. 是否安装了 Claude Code：`npm install -g @anthropic-ai/claude-code`
+### Q: 服务未配置 API Key
 
-### Q: ccc 启动后焦点不在交互框
+```
+❌ Service 'kimi-cn' 未配置 api_key
+💡 编辑 ~/.ccm_services.toml 并设置 api_key
+```
 
-A: 这是 Windows 窗口管理的正常行为，手动点击 Claude Code 窗口即可获得焦点。
+**解决方法：**
+打开 `~/.ccm_services.toml`，找到对应服务，填写 `api_key` 字段。
 
-### Q: 认证错误 (invalid api key)
+### Q: Auth conflict 告警
 
-A:
-1. 确认 ~/.ccm_config 中的 API Key 正确
-2. 确认使用了正确的 region
-3. 使用 `ccm status` 查看当前配置
+```
+⚠️ Auth conflict: Both a token (ANTHROPIC_AUTH_TOKEN) and an API key (ANTHROPIC_API_KEY) are set.
+```
+
+**解决方法：**
+```powershell
+$env:ANTHROPIC_API_KEY = $null
+```
+
+### Q: ccc 启动后看不到窗口
+
+**解决方法：**
+1. 检查是否安装了 Claude Code：
+   ```powershell
+   npm install -g @anthropic-ai/claude-code
+   ```
+
+2. 检查 Python 版本：
+   ```powershell
+   python --version  # 应该 >= 3.10
+   ```
+
+3. 重新安装：
+   ```powershell
+   pip install -e .
+   ```
+
+### Q: 如何查看当前配置
+
+```powershell
+ccm status
+```
 
 ### Q: 如何切回官方 Claude
 
-A:
 ```powershell
 ccm claude
 # 或
 ccc claude
 ```
 
-### Q: 如何查看当前配置
+---
 
-A:
-```powershell
-ccm status
+## 自定义服务
+
+在 `~/.ccm_services.toml` 中添加自己的中转服务：
+
+```toml
+[service.my-service]
+type = "claude"
+base_url = "https://your-proxy.com"
+api_key = "your-api-key"
+model = "claude-sonnet-4-6"
+default_sonnet = "claude-sonnet-4-6"
+default_opus = "claude-opus-4-6"
+default_haiku = "claude-haiku-4-5-20251001"
+subagent_model = "claude-sonnet-4-6"
 ```
 
-### Q: PowerShell profile 有错误怎么办（Terminal-Icons 等）
-
-A: 如果看到 `Import-PowerShellDataFile` 或其他 profile 加载错误，这是**你的 PowerShell profile 本身的问题**，不是 `ccc` 脚本的问题。
-
-**重要说明：**
-- ❌ 这些错误来自 `$PROFILE` 文件加载的模块（如 Terminal-Icons）
-- ✅ `ccc` 创建的临时脚本已修复，不会有语法错误
-- ✅ Terminal-Icons 错误不影响 Claude Code 的正常运行
-
-**修复方法：**
-
+然后使用：
 ```powershell
-# 方法 1: 更新 Terminal-Icons 模块（推荐）
-Update-Module Terminal-Icons -Force
-
-# 方法 2: 升级 PowerShell 到最新版本
-# 访问 https://aka.ms/PSWindows 下载安装
-# 新版本 PowerShell 包含 Import-PowerShellDataFile cmdlet
-
-# 方法 3: 临时禁用 Terminal-Icons
-# 编辑 $PROFILE 文件，注释掉这一行：
-# Import-Module Terminal-Icons
-
-# 方法 4: 检查 PowerShell 版本
-$PSVersionTable.PSVersion
-# 如果版本 < 5.1，建议升级
+ccm my-service
 ```
 
-**验证修复：**
-```powershell
-# 重新打开 PowerShell，应该不再有错误
-# 或者手动测试：
-Import-PowerShellDataFile -Path "test.psd1"
-```
+---
+
+## 核心规范
+
+详见 [CORE_RULES.md](CORE_RULES.md)
+
+**最核心约束：永远禁止向后兼容！**
