@@ -196,6 +196,9 @@ def main(
     if version:
         console.print(f"ccc version {__version__}")
         raise typer.Exit(0)
+
+    # If no subcommand provided, show help
+    if len(sys.argv) == 1:
         from ccm.config.services import get_services_config
 
         console.print("\n[bold yellow]Usage:[/bold yellow] ccc <service>")
