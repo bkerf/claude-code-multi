@@ -6,15 +6,12 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Annotated, Optional
+from typing import Annotated, Callable
 
 import typer
 from rich.console import Console
 
 from ccm import __version__
-from ccm.config import get_config
-from ccm.providers import get_provider
-from ccm.providers.base import Region
 
 app = typer.Typer(
     name="ccc",
@@ -105,55 +102,51 @@ def launch_claude(env: dict) -> None:
             sys.exit(1)
 
 
-def switch_and_launch(provider: str, region: str = "global", variant: Optional[str] = None):
-    """Switch provider and launch Claude Code."""
-    config = get_config()
+def switch_and_launch(service_name: str):
+    """Switch service and launch Claude Code."""
+    from ccm.config.services import get_services_config
 
-    # Get provider instance
-    provider_instance = get_provider(provider)
-    if not provider_instance:
-        console.print(f"[red]error: Unknown provider: {provider}[/red]")
-        console.print("[yellow]💡 Available: glm, kimi, deepseek, minimax, ali, seed, claude, stepfun[/yellow]")
-        raise typer.Exit(1)
-
-    # Normalize region
     try:
-        normalized_region = Region(region)
-    except ValueError:
-        console.print(f"[red]error: Invalid region: {region}[/red]")
-        console.print("[yellow]💡 Valid regions: global, china[/yellow]")
+        config = get_services_config()
+    except FileNotFoundError as e:
+        console.print(f"[red]error: {e}[/red]")
+        console.print("[yellow]💡 复制 ccm_services.template 到 ~/.ccm_services.toml[/yellow]")
+        raise typer.Exit(1)
+    except ValueError as e:
+        console.print(f"[red]error: {e}[/red]")
         raise typer.Exit(1)
 
-    # Get API key
-    api_key = config.get_api_key(provider)
-    if not api_key or api_key.startswith("your-"):
-        console.print(f"[red]error: {provider.upper()}_API_KEY not set[/red]")
-        console.print("[yellow]💡 Add to ~/.ccm_config or[/yellow]")
+    service = config.get_service(service_name)
+    if not service:
+        console.print(f"[red]error: Unknown service: {service_name}[/red]")
+        console.print(f"[yellow]💡 可用服务: {', '.join(config.list_services())}[/yellow]")
         raise typer.Exit(1)
 
-    # Get model override - only use if NO variant is specified
-    model_override = None
-    if not variant:
-        model_override = config.get_model(provider, normalized_region.value)
+    # Check API key
+    if not service.api_key:
+        console.print(f"[red]error: Service '{service_name}' 未配置 api_key[/red]")
+        console.print("[yellow]💡 编辑 ~/.ccm_services 设置 api_key[/yellow]")
+        raise typer.Exit(1)
 
     # Get provider config
-    provider_config = provider_instance.get_config(
-        api_key=api_key,
-        variant=variant,
-        region=normalized_region,
-        model_override=model_override,
-    )
+    provider_config = service.to_provider_config()
 
     # Set environment variables
     env = os.environ.copy()
-    env_vars = provider_instance.get_env_exports(provider_config)
-    for key, val in env_vars.items():
-        if val is None:
-            env.pop(key, None)
-        else:
-            env[key] = val
+    env["ANTHROPIC_BASE_URL"] = provider_config.base_url
+    if provider_config.auth_token:
+        env[provider_config.auth_env_var] = provider_config.auth_token
+    env["ANTHROPIC_MODEL"] = provider_config.model
+    env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = provider_config.default_sonnet or provider_config.model
+    env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = provider_config.default_opus or provider_config.model
+    env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = provider_config.default_haiku or provider_config.model
+    env["CLAUDE_CODE_SUBAGENT_MODEL"] = provider_config.subagent_model or provider_config.model
+    env["CLAUDE_CODE_EFFORT_LEVEL"] = provider_config.effort_level
+    env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = provider_config.disable_nonessential_traffic
+    env["CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"] = provider_config.experimental_agent_teams
 
-    console.print(f"[green]✅ Switched to {provider_instance.INFO.description}[/green]")
+    console.print(f"[green]✅ Switched to {service_name}[/green]")
+    console.print(f"   [blue]Type:[/blue] {service.type}")
     console.print(f"   [blue]Model:[/blue] {provider_config.model}")
     console.print(f"   [blue]Base URL:[/blue] {provider_config.base_url}")
     console.print()
@@ -163,58 +156,72 @@ def switch_and_launch(provider: str, region: str = "global", variant: Optional[s
     launch_claude(env)
 
 
-@app.command()
-def kimi(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
-    """Switch to Kimi and launch Claude Code."""
-    switch_and_launch("kimi", region)
+def create_launcher_command(service_name: str) -> Callable:
+    """Create a launcher command for a service."""
+    def command():
+        switch_and_launch(service_name)
+    command.__name__ = service_name
+    command.__doc__ = f"Switch to {service_name} and launch Claude Code."
+    return command
 
 
-@app.command()
-def deepseek():
-    """Switch to DeepSeek and launch Claude Code."""
-    switch_and_launch("deepseek", "global")
+def register_dynamic_commands():
+    """Register dynamic commands from services config."""
+    from ccm.config.services import get_services_config
+
+    try:
+        config = get_services_config()
+        for service_name in config.list_services():
+            app.command(name=service_name)(create_launcher_command(service_name))
+    except (FileNotFoundError, ValueError):
+        # Config not ready, skip dynamic commands
+        pass
 
 
-@app.command()
-def minimax(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
-    """Switch to MiniMax and launch Claude Code."""
-    switch_and_launch("minimax", region)
+@app.callback(invoke_without_command=True)
+def main(
+    version: Annotated[bool, typer.Option("--version", "-v", help="Show version")] = False,
+):
+    """Claude Code launcher - switch provider and exec claude."""
+    if version:
+        console.print(f"ccc version {__version__}")
+        sys.exit(0)
+
+    # Register dynamic commands on first run
+    register_dynamic_commands()
+
+    # If no subcommand provided, show help
+    if len(sys.argv) == 1:
+        from ccm.config.services import get_services_config
+
+        console.print("\n[bold yellow]Usage:[/bold yellow] ccc <service>")
+        console.print("\n[bold]Services:[/bold]")
+
+        try:
+            config = get_services_config()
+            services = config.list_services()
+            # Show first 10 services
+            for name in services[:10]:
+                service = config.get_service(name)
+                if service:
+                    api_status = "✓" if service.api_key else "✗"
+                    console.print(f"  {name:<16} {service.type} ({api_status})")
+            if len(services) > 10:
+                console.print(f"  ... and {len(services) - 10} more (use 'ccm list' to see all)")
+        except (FileNotFoundError, ValueError):
+            console.print("  [yellow]Configure ~/.ccm_services to enable services[/yellow]")
+
+        console.print("\n[bold]Examples:[/bold]")
+        console.print("  ccc kimi          # Switch to Kimi and launch")
+        console.print("  ccc ali-qwen-cn   # Switch to Alibaba Qwen China and launch")
+        sys.exit(0)
 
 
-@app.command()
-def ali(variant: Annotated[Optional[str], typer.Argument(help="qwen/kimi/glm/minimax")] = None, region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
-    """Switch to Alibaba and launch Claude Code."""
-    switch_and_launch("ali", region, variant)
-
-
-@app.command()
-def seed(variant: Annotated[Optional[str], typer.Argument(help="Model variant")] = None):
-    """Switch to Seed/Doubao and launch Claude Code."""
-    switch_and_launch("seed", "global", variant)
-
-
-@app.command()
-def glm(region: Annotated[str, typer.Argument(help="Region: china or global (default: china)")] = "china"):
-    """Switch to GLM and launch Claude Code."""
-    switch_and_launch("glm", region)
-
-
-@app.command()
-def claude():
-    """Switch to Claude official and launch Claude Code."""
-    switch_and_launch("claude", "global")
-
-
-@app.command()
-def stepfun():
-    """Switch to StepFun and launch Claude Code."""
-    switch_and_launch("stepfun", "global")
-
-
-def main():
+def run():
     """Entry point for ccc command."""
+    register_dynamic_commands()
     app()
 
 
 if __name__ == "__main__":
-    main()
+    run()

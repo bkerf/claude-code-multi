@@ -1,0 +1,244 @@
+# CCM Services Configuration
+# 所有字段均为必填，不可省略
+
+language = "zh"
+
+# ============================================================================
+# Kimi (月之暗面) - 直连
+# ============================================================================
+
+[service.kimi]
+type = "kimi"
+base_url = "https://api.moonshot.ai/anthropic"
+api_key = ""
+model = "kimi-k2.5"
+default_sonnet = "kimi-k2.5"
+default_opus = "kimi-k2.5"
+default_haiku = "kimi-k2.5"
+subagent_model = "kimi-k2.5"
+
+[service.kimi-cn]
+type = "kimi"
+base_url = "https://api.moonshot.cn/anthropic"
+api_key = ""
+model = "kimi-k2.5"
+default_sonnet = "kimi-k2.5"
+default_opus = "kimi-k2.5"
+default_haiku = "kimi-k2.5"
+subagent_model = "kimi-k2.5"
+
+# ============================================================================
+# GLM (智谱) - 直连
+# ============================================================================
+
+[service.glm]
+type = "glm"
+base_url = "https://api.z.ai/api/anthropic"
+api_key = ""
+model = "glm-5"
+default_sonnet = "glm-5"
+default_opus = "glm-5"
+default_haiku = "glm-5"
+subagent_model = "glm-5"
+
+[service.glm-cn]
+type = "glm"
+base_url = "https://open.bigmodel.cn/api/anthropic"
+api_key = ""
+model = "glm-5"
+default_sonnet = "glm-5"
+default_opus = "glm-5"
+default_haiku = "glm-5"
+subagent_model = "glm-5"
+
+# ============================================================================
+# DeepSeek - 直连
+# ============================================================================
+
+[service.deepseek]
+type = "deepseek"
+base_url = "https://api.deepseek.com/anthropic"
+api_key = ""
+model = "deepseek-chat"
+default_sonnet = "deepseek/deepseek-v3.2"
+default_opus = "deepseek/deepseek-v3.2"
+default_haiku = "deepseek/deepseek-v3.2"
+subagent_model = "deepseek-chat"
+
+# ============================================================================
+# MiniMax - 直连
+# ============================================================================
+
+[service.minimax]
+type = "minimax"
+base_url = "https://api.minimax.io/anthropic"
+api_key = ""
+model = "MiniMax-M2.5"
+default_sonnet = "MiniMax-M2.5"
+default_opus = "MiniMax-M2.5"
+default_haiku = "MiniMax-M2.5"
+subagent_model = "MiniMax-M2.5"
+
+[service.minimax-cn]
+type = "minimax"
+base_url = "https://api.minimaxi.com/anthropic"
+api_key = ""
+model = "MiniMax-M2.5"
+default_sonnet = "MiniMax-M2.5"
+default_opus = "MiniMax-M2.5"
+default_haiku = "MiniMax-M2.5"
+subagent_model = "MiniMax-M2.5"
+
+# ============================================================================
+# Alibaba Cloud Coding Plan (阿里云)
+# ============================================================================
+
+[service.ali-qwen]
+type = "ali"
+base_url = "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "qwen3.5-plus"
+default_sonnet = "qwen3.5-plus"
+default_opus = "qwen3.5-plus"
+default_haiku = "qwen3.5-plus"
+subagent_model = "qwen3.5-plus"
+
+[service.ali-qwen-cn]
+type = "ali"
+base_url = "https://coding.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "qwen3.5-plus"
+default_sonnet = "qwen3.5-plus"
+default_opus = "qwen3.5-plus"
+default_haiku = "qwen3.5-plus"
+subagent_model = "qwen3.5-plus"
+
+[service.ali-kimi]
+type = "ali"
+base_url = "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "kimi-k2.5"
+default_sonnet = "kimi-k2.5"
+default_opus = "kimi-k2.5"
+default_haiku = "kimi-k2.5"
+subagent_model = "kimi-k2.5"
+
+[service.ali-kimi-cn]
+type = "ali"
+base_url = "https://coding.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "kimi-k2.5"
+default_sonnet = "kimi-k2.5"
+default_opus = "kimi-k2.5"
+default_haiku = "kimi-k2.5"
+subagent_model = "kimi-k2.5"
+
+[service.ali-glm]
+type = "ali"
+base_url = "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "glm-5"
+default_sonnet = "glm-5"
+default_opus = "glm-5"
+default_haiku = "glm-5"
+subagent_model = "glm-5"
+
+[service.ali-glm-cn]
+type = "ali"
+base_url = "https://coding.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "glm-5"
+default_sonnet = "glm-5"
+default_opus = "glm-5"
+default_haiku = "glm-5"
+subagent_model = "glm-5"
+
+[service.ali-minimax]
+type = "ali"
+base_url = "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "MiniMax-M2.5"
+default_sonnet = "MiniMax-M2.5"
+default_opus = "MiniMax-M2.5"
+default_haiku = "MiniMax-M2.5"
+subagent_model = "MiniMax-M2.5"
+
+[service.ali-minimax-cn]
+type = "ali"
+base_url = "https://coding.dashscope.aliyuncs.com/apps/anthropic"
+api_key = ""
+model = "MiniMax-M2.5"
+default_sonnet = "MiniMax-M2.5"
+default_opus = "MiniMax-M2.5"
+default_haiku = "MiniMax-M2.5"
+subagent_model = "MiniMax-M2.5"
+
+# ============================================================================
+# Seed/Doubao (字节跳动)
+# ============================================================================
+
+[service.seed]
+type = "seed"
+base_url = "https://ark.cn-beijing.volces.com/api/coding"
+api_key = ""
+model = "ark-code-latest"
+default_sonnet = "ark-code-latest"
+default_opus = "ark-code-latest"
+default_haiku = "ark-code-latest"
+subagent_model = "ark-code-latest"
+
+# ============================================================================
+# StepFun (阶跃)
+# ============================================================================
+
+[service.stepfun]
+type = "stepfun"
+base_url = "https://api.stepfun.ai/v1/anthropic"
+api_key = ""
+model = "step-3.5-flash"
+default_sonnet = "step-3.5-flash"
+default_opus = "step-3.5-flash"
+default_haiku = "step-3.5-flash"
+subagent_model = "step-3.5-flash"
+
+# ============================================================================
+# Claude (官方)
+# ============================================================================
+
+[service.claude]
+type = "claude"
+base_url = "https://api.anthropic.com/"
+api_key = ""
+model = "claude-sonnet-4-5-20250929"
+default_sonnet = "claude-sonnet-4-5-20250929"
+default_opus = "claude-opus-4-6"
+default_haiku = "claude-haiku-4-5-20251001"
+subagent_model = "claude-sonnet-4-5-20250929"
+
+# ============================================================================
+# OpenRouter (多提供商网关)
+# ============================================================================
+
+[service.openrouter]
+type = "openrouter"
+base_url = "https://openrouter.ai/api"
+api_key = ""
+model = "anthropic/claude-sonnet-4.5"
+default_sonnet = "anthropic/claude-sonnet-4.5"
+default_opus = "anthropic/claude-opus-4.6"
+default_haiku = "anthropic/claude-haiku-4-5"
+subagent_model = "anthropic/claude-sonnet-4.5"
+
+# ============================================================================
+# 自定义中转服务
+# ============================================================================
+
+[service.2233]
+type = "claude"
+base_url = "https://aicoding.2233.ai"
+api_key = "sk-n3i7a426a942427bf794a0bef62fad6a4e0e9a6eb81ylbUz"
+model = "claude-sonnet-4-5-20250929"
+default_sonnet = "claude-sonnet-4-5-20250929"
+default_opus = "claude-opus-4-6"
+default_haiku = "claude-haiku-4-5-20251001"
+subagent_model = "claude-sonnet-4-5-20250929"
