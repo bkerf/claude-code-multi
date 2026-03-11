@@ -51,7 +51,7 @@ class ProviderConfig:
     effort_level: str = "high"
     disable_nonessential_traffic: str = "1"
     experimental_agent_teams: str = "1"
-    auth_env_var: str = "ANTHROPIC_AUTH_TOKEN"  # MiniMax uses ANTHROPIC_API_KEY
+    auth_env_var: str = "ANTHROPIC_AUTH_TOKEN"
 
 
 class BaseProvider(ABC):

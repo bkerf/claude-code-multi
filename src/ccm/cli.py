@@ -65,7 +65,7 @@ def switch_service(service_name: str):
         config = get_services_config()
     except FileNotFoundError as e:
         console.print(f"[red]❌ {e}[/red]")
-        console.print("[yellow]💡 复制 ccm_services.template 到 ~/.ccm_services 并填写 API Key[/yellow]")
+        console.print("[yellow]💡 复制 ccm_services.template 到 ~/.ccm_services.toml 并填写 API Key[/yellow]")
         raise typer.Exit(1)
     except ValueError as e:
         console.print(f"[red]❌ {e}[/red]")
@@ -80,7 +80,7 @@ def switch_service(service_name: str):
     # Check API key
     if not service.api_key:
         console.print(f"[red]❌ Service '{service_name}' 未配置 api_key[/red]")
-        console.print(f"[yellow]💡 编辑 ~/.ccm_services 并设置 api_key[/yellow]")
+        console.print(f"[yellow]💡 编辑 ~/.ccm_services.toml 并设置 api_key[/yellow]")
         raise typer.Exit(1)
 
     # Get provider config
@@ -205,7 +205,7 @@ def list_services():
 @app.command(name="config")
 def config_cmd():
     """Open configuration file for editing."""
-    config_path = Path.home() / ".ccm_services"
+    config_path = Path.home() / ".ccm_services.toml"
 
     if not config_path.exists():
         console.print(f"[yellow]📝 Creating config file from template...[/yellow]")
@@ -291,7 +291,7 @@ def main(
             if len(services) > 10:
                 console.print(f"  ... and {len(services) - 10} more (use 'ccm list' to see all)")
         except (FileNotFoundError, ValueError):
-            console.print("  [yellow]Configure ~/.ccm_services to enable services[/yellow]")
+            console.print("  [yellow]Configure ~/.ccm_services.toml to enable services[/yellow]")
 
         console.print("\n[bold]Management:[/bold]")
         console.print("  status           Show current configuration")

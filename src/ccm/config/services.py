@@ -31,9 +31,7 @@ class ServiceConfig:
 
     def to_provider_config(self) -> ProviderConfig:
         """转换为 ProviderConfig"""
-        # MiniMax 使用 ANTHROPIC_API_KEY
-        auth_env_var = "ANTHROPIC_API_KEY" if self.type == "minimax" else "ANTHROPIC_AUTH_TOKEN"
-
+        # 所有服务统一使用 ANTHROPIC_AUTH_TOKEN
         return ProviderConfig(
             base_url=self.base_url,
             model=self.model,
@@ -42,7 +40,7 @@ class ServiceConfig:
             default_opus=self.default_opus,
             default_haiku=self.default_haiku,
             subagent_model=self.subagent_model,
-            auth_env_var=auth_env_var,
+            auth_env_var="ANTHROPIC_AUTH_TOKEN",
         )
 
     @classmethod
@@ -67,12 +65,12 @@ class ServicesConfig:
 
     language: str = "zh"
     services: dict[str, ServiceConfig] = field(default_factory=dict)
-    config_path: Path = field(default=Path.home() / ".ccm_services", init=False)
+    config_path: Path = field(default=Path.home() / ".ccm_services.toml", init=False)
 
     @classmethod
     def get_config_path(cls) -> Path:
         """获取配置文件路径"""
-        return Path.home() / ".ccm_services"
+        return Path.home() / ".ccm_services.toml"
 
     @classmethod
     def load(cls) -> ServicesConfig:
@@ -94,11 +92,12 @@ class ServicesConfig:
         language = data.get("language", "zh")
         services: dict[str, ServiceConfig] = {}
 
-        # 解析 [service.xxx] 段
-        for key, value in data.items():
-            if key.startswith("service.") and isinstance(value, dict):
-                service_name = key[8:]  # 去掉 "service." 前缀
-                services[service_name] = ServiceConfig.from_toml(service_name, value)
+        # 解析 [service.xxx] 段 - TOML 会将其解析为嵌套字典
+        service_section = data.get("service", {})
+        if isinstance(service_section, dict):
+            for service_name, service_data in service_section.items():
+                if isinstance(service_data, dict):
+                    services[service_name] = ServiceConfig.from_toml(service_name, service_data)
 
         if not services:
             raise ValueError(f"配置文件中未找到任何服务定义: {config_path}")

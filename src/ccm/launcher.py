@@ -125,7 +125,7 @@ def switch_and_launch(service_name: str):
     # Check API key
     if not service.api_key:
         console.print(f"[red]error: Service '{service_name}' 未配置 api_key[/red]")
-        console.print("[yellow]💡 编辑 ~/.ccm_services 设置 api_key[/yellow]")
+        console.print("[yellow]💡 编辑 ~/.ccm_services.toml 设置 api_key[/yellow]")
         raise typer.Exit(1)
 
     # Get provider config
@@ -209,7 +209,7 @@ def main(
             if len(services) > 10:
                 console.print(f"  ... and {len(services) - 10} more (use 'ccm list' to see all)")
         except (FileNotFoundError, ValueError):
-            console.print("  [yellow]Configure ~/.ccm_services to enable services[/yellow]")
+            console.print("  [yellow]Configure ~/.ccm_services.toml to enable services[/yellow]")
 
         console.print("\n[bold]Examples:[/bold]")
         console.print("  ccc kimi          # Switch to Kimi and launch")
