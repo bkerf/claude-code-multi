@@ -178,6 +178,10 @@ def register_dynamic_commands():
         pass
 
 
+# Register commands at module load time
+register_dynamic_commands()
+
+
 @app.callback(invoke_without_command=True)
 def main(
     version: Annotated[bool, typer.Option("--version", "-v", help="Show version")] = False,
@@ -216,7 +220,6 @@ def main(
 
 def run():
     """Entry point for ccc command."""
-    register_dynamic_commands()
     app()
 
 
