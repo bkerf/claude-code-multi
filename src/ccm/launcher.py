@@ -190,16 +190,12 @@ def register_dynamic_commands():
 
 @app.callback(invoke_without_command=True)
 def main(
-    ctx: typer.Context,
     version: Annotated[bool, typer.Option("--version", "-v", help="Show version")] = False,
 ):
     """Claude Code launcher - switch provider and exec claude."""
     if version:
         console.print(f"ccc version {__version__}")
         raise typer.Exit(0)
-
-    # If no subcommand provided, show help
-    if ctx.invoked_subcommand is None:
         from ccm.config.services import get_services_config
 
         console.print("\n[bold yellow]Usage:[/bold yellow] ccc <service>")
@@ -222,7 +218,7 @@ def main(
         console.print("\n[bold]Examples:[/bold]")
         console.print("  ccc kimi          # Switch to Kimi and launch")
         console.print("  ccc ali-qwen-cn   # Switch to Alibaba Qwen China and launch")
-        sys.exit(0)
+        raise typer.Exit(0)
 
 
 def run():
